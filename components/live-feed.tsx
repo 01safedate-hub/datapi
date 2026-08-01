@@ -20,29 +20,25 @@ const HANDLES = [
 ]
 
 /**
- * Deterministic pseudo-random generator. Using a fixed seed keeps the server
- * and client renders identical, which avoids hydration mismatches while still
- * producing varied-looking numbers.
+ * Static event list. These are intentionally hardcoded rather than randomised
+ * so the server and client render byte-identical HTML (no hydration mismatch).
  */
-function seeded(seed: number) {
-  let s = seed
-  return () => {
-    s = (s * 1664525 + 1013904223) % 4294967296
-    return s / 4294967296
-  }
-}
+const TICKER_EVENTS = [
+  { user: HANDLES[0], amount: 8029 },
+  { user: HANDLES[1], amount: 3084 },
+  { user: HANDLES[2], amount: 5417 },
+  { user: HANDLES[3], amount: 1962 },
+  { user: HANDLES[4], amount: 7305 },
+  { user: HANDLES[5], amount: 2648 },
+  { user: HANDLES[6], amount: 6193 },
+  { user: HANDLES[7], amount: 4471 },
+] as const
 
 /* ------------------------------------------------------------------ *
  *  Scrolling marquee of global mining events
  * ------------------------------------------------------------------ */
 export function EventTicker() {
-  const [events] = useState(() => {
-    const rand = seeded(20260801)
-    return Array.from({ length: 8 }, (_, i) => ({
-      user: HANDLES[i % HANDLES.length],
-      amount: Math.floor(300 + rand() * 9000),
-    }))
-  })
+  const events = TICKER_EVENTS
 
   const row = (
     <div className="flex shrink-0 items-center gap-8 pr-8">
@@ -83,13 +79,14 @@ export function EventTicker() {
  *  Global hashrate leaderboard
  * ------------------------------------------------------------------ */
 export function Leaderboard({ you }: { you: number }) {
-  const [rows, setRows] = useState(() => {
-    const rand = seeded(77712)
-    return HANDLES.slice(0, 6).map((h, i) => ({
-      user: h,
-      score: 98000 - i * 12400 + Math.floor(rand() * 3000),
-    }))
-  })
+  const [rows, setRows] = useState<{ user: string; score: number }[]>(() => [
+    { user: HANDLES[0], score: 99842 },
+    { user: HANDLES[1], score: 86930 },
+    { user: HANDLES[2], score: 74215 },
+    { user: HANDLES[3], score: 61508 },
+    { user: HANDLES[4], score: 49377 },
+    { user: HANDLES[5], score: 36104 },
+  ])
 
   // Rivals keep grinding — small live score drift
   useEffect(() => {

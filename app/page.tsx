@@ -25,7 +25,9 @@ type Toast = { id: number; title: string; body: string }
 
 export default function Page() {
   const [state, setState] = useState<GameState>(INITIAL_STATE)
-  const [now, setNow] = useState(() => Date.now())
+  // Starts at 0 so the server and client agree on the first render; the real
+  // clock is set once we're mounted on the client.
+  const [now, setNow] = useState(0)
   const [mining, setMining] = useState(false)
   const [shake, setShake] = useState(false)
   const [floaters, setFloaters] = useState<Floater[]>([])
@@ -35,6 +37,7 @@ export default function Page() {
 
   /* ---------------- clock ---------------- */
   useEffect(() => {
+    setNow(Date.now())
     const id = setInterval(() => setNow(Date.now()), 1000)
     return () => clearInterval(id)
   }, [])
