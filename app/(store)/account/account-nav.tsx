@@ -3,6 +3,7 @@
 import { CreditCard, Heart, LayoutDashboard, LifeBuoy, LogOut, MapPin, Package, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -19,11 +20,16 @@ const items = [
 export function AccountNav() {
   const pathname = usePathname();
   const router = useRouter();
+  const list = useRef<HTMLUListElement>(null);
+  // On phones the tabs scroll sideways: keep the current one in view.
+  useEffect(() => {
+    list.current?.querySelector<HTMLElement>("[aria-current=page]")?.scrollIntoView({ inline: "center", block: "nearest" });
+  }, [pathname]);
   const isActive = (href: string) => (href === "/account" ? pathname === href : pathname.startsWith(href));
 
   return (
-    <nav aria-label="Account">
-      <ul className="scrollbar-none -mx-4 flex gap-1 overflow-x-auto px-4 lg:mx-0 lg:grid lg:px-0">
+    <nav aria-label="Account" className="min-w-0">
+      <ul ref={list} className="scrollbar-none -mx-4 flex gap-1 overflow-x-auto scroll-px-4 px-4 lg:mx-0 lg:grid lg:px-0">
         {items.map(({ href, label, icon: Icon }) => (
           <li key={href}>
             <Link

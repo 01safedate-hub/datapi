@@ -14,7 +14,7 @@ export function stageTone(stage: Order["stage"]): Tone {
 export function OrderRow({ order }: { order: Order }) {
   const count = order.items.reduce((s, i) => s + i.quantity, 0);
   return (
-    <li>
+    <li className="min-w-0">
       <Link href={`/account/orders/${order.number}`} className="flex items-center gap-4 rounded-card border border-gray-200 p-4 transition-colors hover:border-navy-900">
         <div className="flex -space-x-3">
           {order.items.slice(0, 3).map((i) => (

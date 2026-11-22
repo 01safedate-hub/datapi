@@ -41,7 +41,7 @@ export default async function AdminOrderPage({ params }: { params: Params }) {
         </div>
       </div>
 
-      <div className="grid items-start gap-6 xl:grid-cols-[1fr_360px]">
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="grid gap-6">
           <Card className="overflow-x-auto">
             <table className="w-full min-w-[540px] text-sm">

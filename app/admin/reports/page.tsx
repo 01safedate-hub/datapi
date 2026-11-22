@@ -49,15 +49,15 @@ export default function ReportsPage() {
 
       <Card className="mt-6 p-5"><h2 className="mb-4 font-semibold">Daily revenue, 30 days</h2><RevenueChart data={dailyRevenue} /></Card>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-2">
-        <div>
+      <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <div className="min-w-0">
           <h2 className="mb-3 font-semibold">Profit and loss (active orders)</h2>
           <DataTable caption="Profit and loss" rows={pl} rowKey={(r) => r.line} columns={[
             { key: "l", header: "Line", cell: (r) => <span className={r.line.includes("profit") ? "font-semibold" : ""}>{r.line}</span> },
             { key: "v", header: "Amount", align: "right", cell: (r) => <span className={r.line.includes("profit") ? "font-semibold" : r.ngn < 0 ? "text-gray-600" : ""}>{r.ngn < 0 ? `−${formatNaira(-r.ngn)}` : formatNaira(r.ngn)}</span> },
           ]} />
         </div>
-        <div>
+        <div className="min-w-0">
           <h2 className="mb-3 font-semibold">Sales by category</h2>
           <DataTable caption="Sales by category" rows={byCat} rowKey={(r) => r.name} columns={[
             { key: "n", header: "Category", cell: (r) => r.name },
@@ -67,7 +67,7 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      <div className="mt-6">
+      <div className="mt-6 min-w-0">
         <h2 className="mb-3 font-semibold">Best sellers</h2>
         <DataTable caption="Best sellers" rows={best} rowKey={(p) => p.id} columns={[
           { key: "n", header: "Product", cell: (p) => p.name },

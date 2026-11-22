@@ -35,7 +35,7 @@ export function PricingEditor({ settings, categories, agents, zones }: Props) {
   const fxBad = !(fxN > 50 && fxN < 1000);
 
   return (
-    <div className="grid items-start gap-6 xl:grid-cols-[1fr_320px]">
+    <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
       <div className="grid gap-6">
         <Card className="grid gap-4 p-5">
           <div className="flex items-center justify-between"><h2 className="font-semibold">Exchange rate and markup</h2><span className="text-xs text-gray-500">FX last set {formatDateTime(settings.fxUpdatedAt)}</span></div>
@@ -68,7 +68,7 @@ export function PricingEditor({ settings, categories, agents, zones }: Props) {
           <h2 className="font-semibold">Local delivery zones</h2>
           <div className="grid gap-3">
             {zoneRates.map((z, i) => (
-              <div key={z.id} className="grid grid-cols-[1fr_1fr_1fr] items-end gap-3">
+              <div key={z.id} className="grid grid-cols-3 items-end gap-3">
                 <p className="pb-2.5 text-sm font-medium">{z.name}</p>
                 <Field label="Base ₦" htmlFor={`zb-${z.id}`}><Input id={`zb-${z.id}`} inputMode="numeric" value={z.base} onChange={(e) => setZoneRates((zs) => zs.map((x, j) => (j === i ? { ...x, base: e.target.value } : x)))} className="h-10" /></Field>
                 <Field label="Per extra kg ₦" htmlFor={`zk-${z.id}`}><Input id={`zk-${z.id}`} inputMode="numeric" value={z.perKg} onChange={(e) => setZoneRates((zs) => zs.map((x, j) => (j === i ? { ...x, perKg: e.target.value } : x)))} className="h-10" /></Field>

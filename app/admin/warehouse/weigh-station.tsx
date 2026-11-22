@@ -50,7 +50,7 @@ function Parcel({ p, onDone }: { p: ParcelToWeigh; onDone: () => void }) {
           <PackageCheck className="size-4" aria-hidden /> Check in parcel
         </Button>
       ) : (
-        <div className="mt-4 grid gap-4 border-t border-gray-100 pt-4 md:grid-cols-[1fr_1fr]">
+        <div className="mt-4 grid gap-4 border-t border-gray-100 pt-4 md:grid-cols-2">
           <div className="grid grid-cols-4 gap-2">
             <Field label="Weight kg" htmlFor={`${p.order}-kg`}><Input id={`${p.order}-kg`} inputMode="decimal" value={kg} onChange={(e) => setKg(e.target.value)} className="h-10" /></Field>
             {(["L", "W", "H"] as const).map((l, i) => (
@@ -97,7 +97,7 @@ export function WeighStation({ parcels }: { parcels: ParcelToWeigh[] }) {
   const [list, setList] = useState(parcels);
   if (!list.length) return <EmptyState icon={CheckCircle2} title="Nothing to weigh" description="All arrived parcels have been weighed." />;
   return (
-    <ul className="grid gap-3">
+    <ul className="grid grid-cols-1 gap-3">
       {list.map((p) => (
         <li key={p.order}><Parcel p={p} onDone={() => setList((l) => l.filter((x) => x.order !== p.order))} /></li>
       ))}

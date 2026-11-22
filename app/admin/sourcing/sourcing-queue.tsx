@@ -35,7 +35,7 @@ function Row({ item, suppliers, onDone }: { item: QueueItem; suppliers: { id: st
   const diff = Number(rmb) * 100 - item.expectedFen;
 
   return (
-    <Card className="grid gap-4 p-5 lg:grid-cols-[1fr_1.4fr]">
+    <Card className="grid gap-4 p-5 lg:grid-cols-[minmax(0,1fr)_1.4fr]">
       <div className="flex gap-4">
         <Image src={item.image} alt="" width={64} height={64} className="size-16 rounded-lg bg-gray-100" />
         <div className="text-sm">
@@ -85,7 +85,7 @@ export function SourcingQueue({ items, suppliers }: { items: QueueItem[]; suppli
   const [list, setList] = useState(items);
   if (!list.length) return <EmptyState icon={CheckCircle2} title="Queue is clear" description="Every paid imported item has been bought from a supplier." />;
   return (
-    <ul className="grid gap-3">
+    <ul className="grid grid-cols-1 gap-3">
       {list.map((i) => (
         <li key={i.key}>
           <Row item={i} suppliers={suppliers} onDone={() => setList((l) => l.filter((x) => x.key !== i.key))} />

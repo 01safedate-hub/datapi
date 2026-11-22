@@ -78,7 +78,7 @@ export function CheckoutForm({ states, pickupPoints }: { states: string[]; picku
 
   if (!hydrated) {
     return (
-      <div className="container-page grid gap-6 py-8 lg:grid-cols-[1fr_400px]">
+      <div className="container-page grid gap-6 py-8 lg:grid-cols-[minmax(0,1fr)_400px]">
         <Skeleton className="h-[32rem]" />
         <Skeleton className="h-80" />
       </div>
@@ -127,13 +127,13 @@ export function CheckoutForm({ states, pickupPoints }: { states: string[]; picku
   const inv = (k: string) => ({ "aria-invalid": !!errors[k] || undefined, "aria-describedby": errors[k] ? `${k}-error` : undefined });
 
   return (
-    <div className="container-page py-6 sm:py-8">
+    <div className="container-page py-6 pb-28 sm:py-8 lg:pb-8">
       <Link href="/cart" className="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-navy-900">
         <ChevronLeft className="size-4" aria-hidden /> Back to cart
       </Link>
       <h1 className="mt-2 text-2xl font-semibold sm:text-3xl">Checkout</h1>
 
-      <form ref={formRef} onSubmit={submit} noValidate className="mt-6 grid items-start gap-8 lg:grid-cols-[1fr_400px]">
+      <form id="checkout-form" ref={formRef} onSubmit={submit} noValidate className="mt-6 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_400px]">
         <div className="grid gap-5">
           <Step n={1} title="Contact">
             <p className="-mt-2 mb-5 text-sm text-gray-600">
@@ -158,7 +158,7 @@ export function CheckoutForm({ states, pickupPoints }: { states: string[]; picku
                 { v: "delivery" as const, icon: Truck, title: "Doorstep delivery", body: "Anywhere in Nigeria" },
                 { v: "pickup" as const, icon: Store, title: "Pickup hub", body: "Free in Lagos" },
               ].map((o) => (
-                <label key={o.v} className={cn("flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors", form.method === o.v ? "border-navy-900 ring-1 ring-navy-900" : "border-gray-300 hover:border-gray-400")}>
+                <label key={o.v} className={cn("flex cursor-pointer items-start gap-2.5 rounded-lg border p-3 transition-colors sm:gap-3 sm:p-4", form.method === o.v ? "border-navy-900 ring-1 ring-navy-900" : "border-gray-300 hover:border-gray-400")}>
                   <input type="radio" name="method" className="sr-only" checked={form.method === o.v} onChange={() => set("method", o.v)} />
                   <o.icon className="mt-0.5 size-5 shrink-0 text-brand-600" aria-hidden />
                   <span>
@@ -252,6 +252,16 @@ export function CheckoutForm({ states, pickupPoints }: { states: string[]; picku
           </a>
         </Card>
       </form>
+
+      <div className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-3 border-t border-gray-200 bg-white px-4 py-3 pb-safe lg:hidden">
+        <div className="min-w-0">
+          <p className="text-xs text-gray-500">Total</p>
+          <p className="text-lg font-semibold tabular-nums">{formatNaira(q.totalKobo)}</p>
+        </div>
+        <Button type="submit" form="checkout-form" variant="accent" className="ml-auto flex-1" loading={pending} loadingText="Connecting…">
+          <Lock className="size-4" aria-hidden /> Pay now
+        </Button>
+      </div>
 
       {pending && (
         <div role="status" className="fixed inset-0 z-50 grid animate-fade-in place-items-center bg-white/80 backdrop-blur-sm">

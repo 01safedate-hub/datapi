@@ -33,7 +33,7 @@ export default async function TrackPage({ searchParams }: { searchParams: Search
       </div>
 
       <Card className="mt-8 p-5 sm:p-6">
-        <form action="/track" className="grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+        <form action="/track" className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_1fr_auto] sm:items-end">
           <Field label="Order number" htmlFor="order">
             <Input id="order" name="order" placeholder="SHZ-10482" defaultValue={number} required autoCapitalize="characters" />
           </Field>

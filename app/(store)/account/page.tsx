@@ -42,7 +42,7 @@ export default function AccountOverview() {
       <section>
         <SectionHeader title="Recent orders" href="/account/orders" />
         {orders.length ? (
-          <ul className="grid gap-3">{orders.slice(0, 3).map((o) => <OrderRow key={o.id} order={o} />)}</ul>
+          <ul className="grid grid-cols-1 gap-3">{orders.slice(0, 3).map((o) => <OrderRow key={o.id} order={o} />)}</ul>
         ) : (
           <Card className="p-6 text-center">
             <p className="text-gray-600">No orders yet.</p>

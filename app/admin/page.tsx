@@ -40,7 +40,7 @@ export default function AdminDashboard() {
         <StatCard label="Balances due" value={formatNaira(balance)} sub="Awaiting customer approval" icon={Wallet} tone={balance ? "warn" : "default"} />
       </div>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_360px]">
+      <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <Card className="p-5">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="font-semibold">Daily revenue</h2>

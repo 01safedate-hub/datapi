@@ -20,7 +20,7 @@ export function StaffManager({ staff: initial, roleLabels, permissions, matrix: 
   const [err, setErr] = useState<Record<string, string>>({});
 
   return (
-    <div className="grid gap-6">
+    <div className="grid grid-cols-1 gap-6">
       <div className="flex justify-end"><Button onClick={() => setOpen(true)}><UserPlus className="size-4" aria-hidden /> Invite staff</Button></div>
       <Card className="divide-y divide-gray-100">
         {staff.map((s) => (
@@ -41,7 +41,7 @@ export function StaffManager({ staff: initial, roleLabels, permissions, matrix: 
         ))}
       </Card>
 
-      <div>
+      <div className="min-w-0">
         <h2 className="mb-3 font-semibold">Permission matrix</h2>
         <Card className="overflow-x-auto">
           <table className="w-full min-w-[720px] text-sm">

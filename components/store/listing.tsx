@@ -26,7 +26,7 @@ export function Listing({ title, description, query, crumbs, showCategories = tr
         <h1 className="text-2xl font-semibold sm:text-3xl">{title}</h1>
         {description && <p className="mt-1 max-w-2xl text-gray-600">{description}</p>}
       </div>
-      <div className="grid gap-8 lg:grid-cols-[220px_1fr]">
+      <div className="grid gap-8 lg:grid-cols-[220px_minmax(0,1fr)]">
         <Suspense fallback={<div className="hidden lg:block" />}>
           <FilterSidebar categories={cats} />
         </Suspense>

@@ -14,7 +14,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
         <p className="text-sm text-gray-500">Signed in as {demoCustomer.email}</p>
         <h1 className="text-2xl font-semibold sm:text-3xl">Hi, {demoCustomer.name.split(" ")[0]}</h1>
       </div>
-      <div className="grid items-start gap-6 lg:grid-cols-[220px_1fr] lg:gap-10">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-10">
         <AccountNav />
         <div className="min-w-0">{children}</div>
       </div>

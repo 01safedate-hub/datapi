@@ -19,12 +19,12 @@ export default function OrdersPage() {
     <div className="grid gap-8">
       <section>
         <h2 className="mb-3 text-lg font-semibold">In progress ({active.length})</h2>
-        {active.length ? <ul className="grid gap-3">{active.map((o) => <OrderRow key={o.id} order={o} />)}</ul> : <p className="text-gray-600">Nothing on the way right now.</p>}
+        {active.length ? <ul className="grid grid-cols-1 gap-3">{active.map((o) => <OrderRow key={o.id} order={o} />)}</ul> : <p className="text-gray-600">Nothing on the way right now.</p>}
       </section>
       {past.length > 0 && (
         <section>
           <h2 className="mb-3 text-lg font-semibold">Completed</h2>
-          <ul className="grid gap-3">{past.map((o) => <OrderRow key={o.id} order={o} />)}</ul>
+          <ul className="grid grid-cols-1 gap-3">{past.map((o) => <OrderRow key={o.id} order={o} />)}</ul>
         </section>
       )}
     </div>

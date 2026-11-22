@@ -129,14 +129,14 @@ export function ProductPurchase({ product }: { product: PublicProduct }) {
       </div>
 
       {soldOut ? (
-        <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+        <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
           <Button size="lg" variant="outline" onClick={() => toast.success("We'll email you when it's back in stock")}>
             Notify me when available
           </Button>
           <WishlistButton slug={p.slug} name={p.name} withLabel />
         </div>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
+        <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_1fr_auto]">
           <Button size="lg" variant="accent" onClick={() => addToCart(false)}>
             {justAdded ? <Check className="size-5" aria-hidden /> : <ShoppingCart className="size-5" aria-hidden />}
             {justAdded ? "Added" : "Add to cart"}

@@ -48,7 +48,7 @@ export default async function OrderDetailPage({ params }: { params: Params }) {
 
       {order.stage === "awaiting_balance" && <BalanceApproval number={order.number} balanceKobo={t.balanceDueKobo} note={order.notes[0]} />}
 
-      <div className="grid items-start gap-6 xl:grid-cols-[1fr_340px]">
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
         <div className="grid gap-6">
           <Card className="p-5">
             <h3 className="mb-4 font-semibold">Items</h3>
@@ -63,7 +63,7 @@ export default async function OrderDetailPage({ params }: { params: Params }) {
                     {Object.keys(i.options).length > 0 && <p className="text-gray-600">{Object.entries(i.options).map(([k, v]) => `${k}: ${v}`).join(" · ")}</p>}
                     <p className="text-gray-600">Qty {i.quantity} · {i.source === "imported" ? "Imported" : "Local"}</p>
                   </div>
-                  <p className="text-sm font-medium tabular-nums">{formatNaira(i.unitPriceKobo * i.quantity)}</p>
+                  <p className="shrink-0 text-sm font-medium whitespace-nowrap tabular-nums">{formatNaira(i.unitPriceKobo * i.quantity)}</p>
                 </li>
               ))}
             </ul>

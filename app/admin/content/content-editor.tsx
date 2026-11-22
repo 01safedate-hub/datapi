@@ -39,7 +39,7 @@ export function ContentEditor() {
           ))}
         </ul>
       </Card>
-      <Card className="grid gap-4 p-5 lg:grid-cols-[220px_1fr]">
+      <Card className="grid gap-4 p-5 lg:grid-cols-[220px_minmax(0,1fr)]">
         <div>
           <h2 className="mb-3 font-semibold">Email templates</h2>
           <ul className="grid gap-1">

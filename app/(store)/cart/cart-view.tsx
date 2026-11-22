@@ -11,6 +11,7 @@ import { Badge, Callout, Card, EmptyState, Skeleton } from "@/components/ui/misc
 import { useHydrated } from "@/lib/hooks";
 import { quote } from "@/lib/pricing";
 import { cartCount, useCart, type CartLine } from "@/lib/store/cart";
+import { whatsappLink } from "@/lib/site";
 import { formatNaira } from "@/lib/utils";
 
 function Line({ line }: { line: CartLine }) {
@@ -61,7 +62,7 @@ export function CartView() {
 
   if (!hydrated) {
     return (
-      <div className="container-page grid gap-6 py-8 lg:grid-cols-[1fr_380px]">
+      <div className="container-page grid gap-6 py-8 lg:grid-cols-[minmax(0,1fr)_380px]">
         <Skeleton className="h-80" />
         <Skeleton className="h-64" />
       </div>
@@ -94,7 +95,7 @@ export function CartView() {
     <div className="container-page py-6 sm:py-8">
       <h1 className="text-2xl font-semibold sm:text-3xl">Cart <span className="text-lg font-normal text-gray-500">({cartCount(lines)} items)</span></h1>
 
-      <div className="mt-6 grid items-start gap-8 lg:grid-cols-[1fr_380px]">
+      <div className="mt-6 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div className="grid gap-6">
           {imported.length > 0 && local.length > 0 && (
             <Callout title="Your order will arrive in two parts">
@@ -129,6 +130,9 @@ export function CartView() {
           <p className="flex items-center justify-center gap-1.5 text-xs text-gray-500">
             <Lock className="size-3.5" aria-hidden /> Secure checkout · Guest checkout available
           </p>
+          <a href={whatsappLink("Hi Shupzy, I have a question about my cart")} target="_blank" rel="noopener noreferrer" className="text-center text-sm font-medium text-brand-600 hover:underline">
+            Questions? Chat with us on WhatsApp
+          </a>
         </Card>
       </div>
     </div>

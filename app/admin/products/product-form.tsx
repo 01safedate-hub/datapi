@@ -74,7 +74,7 @@ export function ProductForm({ product, categories }: { product?: Product; catego
   const inv = (k: string) => ({ "aria-invalid": !!errors[k] || undefined });
 
   return (
-    <div className="grid items-start gap-6 xl:grid-cols-[1fr_340px]">
+    <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
       <div className="grid gap-6">
         <Card className="grid gap-4 p-5">
           <h2 className="font-semibold">Basics</h2>

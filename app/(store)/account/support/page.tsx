@@ -28,7 +28,7 @@ export default function SupportPage() {
         <h2 className="text-lg font-semibold">Your requests</h2>
         <NewTicket orders={orders} />
       </div>
-      <ul className="grid gap-3">
+      <ul className="grid grid-cols-1 gap-3">
         {mine.map((t) => (
           <li key={t.id}>
             <Card className="p-4">
