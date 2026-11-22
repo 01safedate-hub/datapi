@@ -37,7 +37,7 @@ Copy `.env.example` to `.env.local` when you're ready to connect real services.
 
 ## Going live (next steps)
 
-1. Apply `supabase/migrations/20261122000000_init.sql` to the `shupzy` Supabase project and swap `lib/catalog.ts` / `lib/orders.ts` to Supabase queries.
+1. The schema in `supabase/migrations/` is applied to the `shupzy` Supabase project. Swap `lib/catalog.ts` / `lib/orders.ts` to Supabase queries.
 2. Add Paystack and Flutterwave keys; wire `placeOrder` to initialise payment and add webhook routes (`/api/webhooks/paystack`, `/api/webhooks/flutterwave`).
 3. Add the Alibaba API key and implement the provider in the import screen.
 4. Connect Resend (email) and WhatsApp Cloud API templates.

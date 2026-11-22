@@ -1,0 +1,9 @@
+create index on order_items (product_id);
+create index on wishlists (product_id);
+create index on supplier_purchases (order_item_id);
+create index on supplier_purchases (supplier_id);
+create index on shipment_items (order_item_id);
+create index on tickets (order_id);
+create index on reviews (user_id);
+create index on orders (discount_code);
+create index on orders (assigned_to);
