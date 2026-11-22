@@ -1,33 +1,46 @@
-# datapi
+# Shupzy
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [v0](https://v0.app).
+Storefront and admin for selling **imported (China) and local products in naira**, with sourcing, warehouse weighing, shipping, delivery and finance in one dashboard.
 
-## Built with v0
+Built with Next.js 16 (App Router, Server Actions), React 19, Tailwind CSS 4 and TypeScript. The app runs entirely on **mock data** for now; every external service (Supabase, Paystack, Flutterwave, Alibaba, Resend, WhatsApp) sits behind a small module so it can be switched on without touching pages.
 
-This repository is linked to a [v0](https://v0.app) project. You can continue developing by visiting the link below -- start new chats to make changes, and v0 will push commits directly to this repo. Every merge to `main` will automatically deploy.
-
-[Continue working on v0 →](https://v0.app/chat/projects/prj_dfI9pYXtmRYPN6xTJl5nLi1NnErI)
-
-## Getting Started
-
-First, run the development server:
+## Run it
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
+pnpm install
+pnpm dev            # http://localhost:3000  ·  admin at /admin
+pnpm build && pnpm start
+pnpm typecheck && pnpm lint
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Copy `.env.example` to `.env.local` when you're ready to connect real services.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## What's inside
 
-## Learn More
+| Area | Routes |
+| --- | --- |
+| Store | `/`, `/shop`, `/c/[slug]`, `/p/[slug]`, `/search`, `/cart`, `/checkout`, `/checkout/success`, `/track` |
+| Account | `/account`, `/account/orders/[number]`, `/account/payments`, `/account/addresses`, `/account/wishlist`, `/account/support`, `/account/settings` |
+| Auth | `/login`, `/register`, `/forgot-password`, `/reset-password` |
+| Info | `/how-it-works`, `/shipping`, `/faq`, `/about`, `/contact`, `/privacy`, `/terms`, `/refund-policy` |
+| Admin | `/admin` dashboard, orders, sourcing queue, China warehouse (weighing + balance requests), shipments, deliveries, products (+ editor, CSV, Alibaba import), categories, suppliers, pricing rules, discounts, customers, support, reports (CSV export), content, staff & roles, settings, audit log |
+| Other | `/invoice/[number]` (printable), `/offline`, `manifest.webmanifest`, `sitemap.xml`, `robots.txt`, OG images |
 
-To learn more, take a look at the following resources:
+## Key decisions
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [v0 Documentation](https://v0.app/docs) - learn about v0 and how to use it.
+- **Pricing engine** (`lib/pricing.ts`): RMB × FX × (1 + markup), rounded up to ₦50; air freight by chargeable weight `max(actual, L×W×H ÷ 6000)`; zone-based local delivery. The same pure functions run in the browser for instant feedback and on the server, which recomputes every checkout total.
+- **No surprise charges**: if measured weight costs more than the estimate, the order moves to *Awaiting balance* and the customer approves before dispatch.
+- **Frozen rates**: each order stores the FX and rates it was placed at, so reports never change retroactively.
+- **Customer never stuck**: toasts with undo, inline validation that focuses the first error, saved checkout drafts, empty/error/loading states on every page, an offline banner and offline page, and a WhatsApp help button that knows which page you're on.
+- **PWA**: installable manifest with maskable icons, shortcuts and screenshots; service worker with network-first pages, cached assets and an offline fallback; update prompt.
+- **SEO**: per-page metadata, canonical URLs, Open Graph images (site + per product), JSON-LD (Organization, WebSite search, Product, BreadcrumbList, FAQPage), sitemap and robots.
+
+## Going live (next steps)
+
+1. Apply `supabase/migrations/20261122000000_init.sql` to the `shupzy` Supabase project and swap `lib/catalog.ts` / `lib/orders.ts` to Supabase queries.
+2. Add Paystack and Flutterwave keys; wire `placeOrder` to initialise payment and add webhook routes (`/api/webhooks/paystack`, `/api/webhooks/flutterwave`).
+3. Add the Alibaba API key and implement the provider in the import screen.
+4. Connect Resend (email) and WhatsApp Cloud API templates.
+5. Have the legal pages and VAT treatment reviewed before launch.
+
+Regenerate placeholder product images with `node scripts/generate-product-images.mjs`.

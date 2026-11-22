@@ -1,54 +1,87 @@
-import { Analytics } from '@vercel/analytics/next'
-import type { Metadata, Viewport } from 'next'
-import { Orbitron, Rajdhani } from 'next/font/google'
-import './globals.css'
-
-const orbitron = Orbitron({
-  subsets: ['latin'],
-  variable: '--font-orbitron',
-  weight: ['400', '500', '600', '700', '800', '900'],
-})
-
-const rajdhani = Rajdhani({
-  subsets: ['latin'],
-  variable: '--font-rajdhani',
-  weight: ['300', '400', '500', '600', '700'],
-})
+import { GeistMono } from "geist/font/mono";
+import { GeistSans } from "geist/font/sans";
+import type { Metadata, Viewport } from "next";
+import { Toaster } from "sonner";
+import { PwaRegister } from "@/components/pwa-register";
+import { site } from "@/lib/site";
+import "./globals.css";
 
 export const metadata: Metadata = {
-  title: 'DATAPI — Neural Token Mining Protocol',
-  description:
-    'Mine DPI tokens from the datastream every 24 hours. Overclock your rig with boost modules and climb the global hashrate leaderboard.',
-  generator: 'v0.app',
+  metadataBase: new URL(site.url),
+  title: {
+    default: `${site.name} — Imported and local products, priced in naira`,
+    template: `%s · ${site.name}`,
+  },
+  description: site.description,
+  applicationName: site.name,
+  keywords: [
+    "online shopping Nigeria",
+    "buy from China Nigeria",
+    "imported products Lagos",
+    "electronics Nigeria",
+    "phones",
+    "laptops",
+    "fashion",
+    "Shupzy",
+  ],
+  authors: [{ name: site.name, url: site.url }],
+  creator: site.name,
+  publisher: site.name,
+  category: "shopping",
+  alternates: { canonical: "/" },
+  formatDetection: { telephone: false, email: false, address: false },
+  openGraph: {
+    type: "website",
+    siteName: site.name,
+    locale: site.locale,
+    url: site.url,
+    title: `${site.name} — Imported and local products, priced in naira`,
+    description: site.description,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${site.name} — Imported and local products, priced in naira`,
+    description: site.description,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
+  },
   icons: {
     icon: [
-      { url: '/icon-light-32x32.png', media: '(prefers-color-scheme: light)' },
-      { url: '/icon-dark-32x32.png', media: '(prefers-color-scheme: dark)' },
-      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: "/favicon.ico", sizes: "32x32" },
+      { url: "/icons/icon-192.png", type: "image/png", sizes: "192x192" },
     ],
-    apple: '/apple-icon.png',
+    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180" }],
   },
-}
+  appleWebApp: { capable: true, title: site.name, statusBarStyle: "default" },
+  other: { "mobile-web-app-capable": "yes" },
+};
 
 export const viewport: Viewport = {
-  colorScheme: 'dark',
-  themeColor: '#0a0f1a',
-  width: 'device-width',
+  themeColor: [{ color: site.themeColor }],
+  width: "device-width",
   initialScale: 1,
-  userScalable: false,
-}
+  viewportFit: "cover",
+  colorScheme: "light",
+};
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`bg-background ${orbitron.variable} ${rajdhani.variable}`}>
-      <body className="antialiased overflow-x-hidden">
+    <html lang="en-NG" className={`${GeistSans.variable} ${GeistMono.variable}`}>
+      <body>
         {children}
-        {process.env.NODE_ENV === 'production' && <Analytics />}
+        <Toaster
+          position="bottom-center"
+          closeButton
+          richColors
+          toastOptions={{ classNames: { toast: "font-sans" } }}
+          offset={{ bottom: 24 }}
+          mobileOffset={{ bottom: 76 }}
+        />
+        <PwaRegister />
       </body>
     </html>
-  )
+  );
 }
