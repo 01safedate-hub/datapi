@@ -12,7 +12,7 @@ export default function AdminSettingsPage() {
         connections={[
           { name: "Supabase", detail: "Database, auth and storage", ok: has("NEXT_PUBLIC_SUPABASE_URL") },
           { name: "Paystack", detail: "Card, transfer, USSD", ok: has("PAYSTACK_SECRET_KEY") },
-          { name: "TMPI", detail: "China product import and price sync", ok: has("TMPI_API_KEY") },
+          { name: "TMAPI (via Supabase)", detail: "China product import from Alibaba.com and 1688", ok: has("SUPABASE_SECRET_KEY") && has("NEXT_PUBLIC_SUPABASE_URL") },
           { name: "GIG Logistics", detail: "Courier (rates set in Settings until API is connected)", ok: true },
           { name: "Jumia Delivery", detail: "Courier and pickup stations (rates set in Settings)", ok: true },
           { name: "Resend", detail: "Transactional email", ok: has("RESEND_API_KEY") },

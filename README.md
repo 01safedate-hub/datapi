@@ -22,7 +22,7 @@ pnpm lint
 | Marketplace | `/store/[slug]`, `/manufacturers`, `/brands`, `/brands/[slug]`, `/brands/register`, `/buyer-protection`, `/messages` |
 | Sellers | `/sell`, `/sell/apply` (manufacturer vs vendor), `/seller` overview, orders, products (+ new listing), messages, sponsored ads, plan & listings, payouts |
 | Account | `/account`, orders (per-shipment tracking + confirm delivery), rewards (loyalty points), payments, addresses, wishlist, support, settings |
-| Admin | dashboard, orders, sellers, payouts (approve / freeze / mark paid), chat safety, sponsored ads (on/off switch), seller plans, brands (+ official brand approvals), China import (TMPI), products, stock forecasting, sourcing, warehouse, shipments, deliveries, pricing, discounts, reports, staff, settings, audit |
+| Admin | dashboard, orders, sellers, payouts (approve / freeze / mark paid), chat safety, sponsored ads (on/off switch), seller plans, brands (+ official brand approvals), China import (TMAPI), products, stock forecasting, sourcing, warehouse, shipments, deliveries, pricing, discounts, reports, staff, settings, audit |
 
 ## Key decisions
 
@@ -41,6 +41,6 @@ pnpm lint
 
 1. The marketplace schema (`supabase/migrations/20261127000000_marketplace.sql`) is applied. Swap `lib/catalog.ts`, `lib/orders.ts`, `lib/marketplace.ts` and `lib/store/chat.ts` to Supabase (chat → Supabase Realtime on `chat_messages`; insert through a server action that runs `scanMessage`).
 2. Add `PAYSTACK_SECRET_KEY`; wire `placeOrder` and a `/api/webhooks/paystack` route; use Paystack Transfers for approved payouts.
-3. Add `TMPI_API_KEY` and `TMPI_API_URL`, then fill in the field mapping in `lib/tmpi.ts` from the TMPI docs.
+3. China import is live: the Supabase Edge Function `supabase/functions/tmapi` calls TMAPI (Alibaba.com search, plus 1688 if your plan includes it) with the Supabase secret `TMAPI_KEY`, and saves imports as draft products with variants and mirrored photos. Netlify needs `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SECRET_KEY` to reach it.
 4. Replace `public/carriers/gig.svg` and `jumia.svg` with the official logos (same file names). Connect GIG and Jumia APIs when ready; rates live in `lib/data/settings.ts` until then.
 5. Connect Resend and WhatsApp templates. Have legal pages, seller terms and VAT treatment reviewed.

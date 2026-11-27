@@ -66,7 +66,7 @@ export const adminNav: NavGroup[] = [
     title: "Catalogue",
     items: [
       { href: "/admin/products", label: "Products", icon: Package },
-      { href: "/admin/products/import", label: "China import (TMPI)", icon: Cloud },
+      { href: "/admin/products/import", label: "China import", icon: Cloud },
       { href: "/admin/brands", label: "Brands", icon: BadgeCheck },
       { href: "/admin/categories", label: "Categories", icon: FolderTree },
       { href: "/admin/suppliers", label: "Suppliers", icon: Factory },
