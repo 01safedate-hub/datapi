@@ -1,4 +1,5 @@
 import type { Availability, Category, Product, ProductOption, ProductSource, Variant, WholesaleTier } from "../types";
+import { liveProducts } from "./live";
 
 export const categories: Category[] = [
   { slug: "phones", name: "Phones & Accessories", icon: "smartphone", description: "Smartphones, chargers, power banks, cases and earbuds." },
@@ -366,7 +367,7 @@ function buildVariants(r: Raw, base: { fen?: number; kobo?: number; compareKobo?
   });
 }
 
-export const products: Product[] = raw.map((r0, i) => {
+const sampleProducts: Product[] = raw.map((r0, i) => {
   const r = { ...r0, ...extras[r0.slug] };
   const storeSlug = r.source === "imported" ? "alaba-verified" : (r.store ?? "alaba-verified");
   const stock = r.stock ?? 999;
@@ -411,6 +412,12 @@ export const products: Product[] = raw.map((r0, i) => {
     tags: r.tags,
   };
 });
+
+/** Live Supabase products first; a sample product is dropped if a live one takes its slug. */
+export const products: Product[] = [
+  ...liveProducts,
+  ...sampleProducts.filter((p) => !liveProducts.some((l) => l.slug === p.slug)),
+];
 
 /** Used by scripts/generate-product-images.ts */
 export const productIcons = raw.map((r) => ({ slug: r.slug, icon: r.icon, category: r.category }));
