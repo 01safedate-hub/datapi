@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "pnpm dlx vitest@5 run",
     "prebuild": "node scripts/build-brand-assets.mjs",
     "predev": "node scripts/build-brand-assets.mjs"
   },
@@ -39,7 +39,6 @@
     "lucide-static": "^1.77.0",
     "sharp": "^0.35.5",
     "tailwindcss": "^4.3.5",
-    "typescript": "^6.0.3",
-    "vitest": "^5.1.2"
+    "typescript": "^6.0.3"
   }
 }
