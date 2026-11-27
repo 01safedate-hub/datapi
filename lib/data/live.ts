@@ -9,8 +9,8 @@ import { brands, storeBySlug } from "./stores";
  */
 
 // Publishable values only: safe in the browser, limited by row-level security.
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://edjudaxkrhejnuwrhqzz.supabase.co";
-const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || "sb_publishable_zkfrwXVJcNopev5ChQ9hhw_vk9PgqXm";
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
 type Row = {
   id: string;
@@ -62,7 +62,10 @@ async function get<T>(path: string): Promise<T[]> {
   if (!SUPABASE_URL || !SUPABASE_KEY) return [];
   try {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
-      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
+      // sb_publishable_ keys are not JWTs: send them only as the apikey header.
+      headers: SUPABASE_KEY.startsWith("sb_")
+        ? { apikey: SUPABASE_KEY }
+        : { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
       cache: "no-store",
       signal: AbortSignal.timeout(8000),
     });
