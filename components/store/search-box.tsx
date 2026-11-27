@@ -9,7 +9,7 @@ import { useDebounced } from "@/lib/hooks";
 import { matchScore } from "@/lib/search";
 import { cn, formatNaira } from "@/lib/utils";
 
-const RECENT_KEY = "shupzy-recent-searches";
+const RECENT_KEY = "alaba-recent-searches";
 const popular = ["power bank", "earbuds", "laptop", "air fryer", "sneakers", "rechargeable fan"];
 
 function readRecent(): string[] {

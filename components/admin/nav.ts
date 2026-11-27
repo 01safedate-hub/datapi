@@ -18,6 +18,14 @@ import {
   UserCog,
   Users,
   FileText,
+  Banknote,
+  BadgeCheck,
+  Megaphone,
+  ShieldAlert,
+  Store,
+  TrendingUp,
+  CreditCard,
+  MessageCircle,
   type LucideIcon,
 } from "lucide-react";
 
@@ -41,13 +49,25 @@ export const adminNav: NavGroup[] = [
       { href: "/admin/warehouse", label: "China warehouse", icon: Scale },
       { href: "/admin/shipments", label: "Shipments", icon: Plane },
       { href: "/admin/deliveries", label: "Deliveries", icon: Truck },
+      { href: "/admin/forecasting", label: "Stock forecasting", icon: TrendingUp },
+    ],
+  },
+  {
+    title: "Marketplace",
+    items: [
+      { href: "/admin/sellers", label: "Sellers", icon: Store },
+      { href: "/admin/payouts", label: "Payouts", icon: Banknote },
+      { href: "/admin/chat-safety", label: "Chat safety", icon: ShieldAlert },
+      { href: "/admin/ads", label: "Sponsored ads", icon: Megaphone },
+      { href: "/admin/plans", label: "Seller plans", icon: CreditCard },
     ],
   },
   {
     title: "Catalogue",
     items: [
       { href: "/admin/products", label: "Products", icon: Package },
-      { href: "/admin/products/import", label: "Alibaba import", icon: Cloud },
+      { href: "/admin/products/import", label: "China import (TMPI)", icon: Cloud },
+      { href: "/admin/brands", label: "Brands", icon: BadgeCheck },
       { href: "/admin/categories", label: "Categories", icon: FolderTree },
       { href: "/admin/suppliers", label: "Suppliers", icon: Factory },
     ],
@@ -68,5 +88,28 @@ export const adminNav: NavGroup[] = [
       { href: "/admin/settings", label: "Settings", icon: Settings },
       { href: "/admin/audit", label: "Audit log", icon: FileClock },
     ],
+  },
+];
+
+export const sellerNav: NavGroup[] = [
+  { title: "", items: [{ href: "/seller", label: "Overview", icon: LayoutDashboard }] },
+  {
+    title: "Sell",
+    items: [
+      { href: "/seller/orders", label: "Orders", icon: ShoppingCart },
+      { href: "/seller/products", label: "Products", icon: Package },
+      { href: "/seller/messages", label: "Messages", icon: MessageCircle },
+    ],
+  },
+  {
+    title: "Grow",
+    items: [
+      { href: "/seller/ads", label: "Sponsored ads", icon: Megaphone },
+      { href: "/seller/plan", label: "Plan & listings", icon: CreditCard },
+    ],
+  },
+  {
+    title: "Money",
+    items: [{ href: "/seller/payouts", label: "Payouts", icon: Banknote }],
   },
 ];

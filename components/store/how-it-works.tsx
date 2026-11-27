@@ -1,10 +1,10 @@
-import { CreditCard, PackageCheck, Plane, Search } from "lucide-react";
+import { CreditCard, PackageCheck, Search, Truck } from "lucide-react";
 
 const steps = [
-  { icon: Search, title: "Pick your products", body: "Every price is in naira, with estimated shipping shown before you add to cart." },
-  { icon: CreditCard, title: "Pay securely", body: "Card, bank transfer or USSD through Paystack or Flutterwave." },
-  { icon: Plane, title: "We buy and ship", body: "We order from the supplier, check and weigh it in China, then fly it to Lagos." },
-  { icon: PackageCheck, title: "Delivered to you", body: "Doorstep delivery anywhere in Nigeria, or free pickup at a Shupzy hub." },
+  { icon: Search, title: "Find it direct", body: "Shop manufacturers, vendors and Alaba's own imports. Prices in naira, delivery shown before you pay." },
+  { icon: CreditCard, title: "Pay securely", body: "Card, bank transfer or USSD through Paystack. Sellers are paid only after you confirm delivery." },
+  { icon: Truck, title: "Seller ships", body: "Each seller ships with GIG Logistics or Jumia Delivery, your choice. Track every parcel." },
+  { icon: PackageCheck, title: "Confirm & done", body: "Confirm delivery and the seller is paid. Something wrong? Report it and we step in." },
 ];
 
 export function HowItWorksSteps() {

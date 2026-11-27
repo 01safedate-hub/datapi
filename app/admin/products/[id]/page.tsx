@@ -1,3 +1,4 @@
+import { brands, stores } from "@/lib/data/stores";
 import { ChevronLeft, ExternalLink } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -27,7 +28,7 @@ export default async function EditProductPage({ params }: { params: Params }) {
         description={product.name}
         actions={<ButtonLink href={`/p/${product.slug}`} target="_blank" variant="outline" size="sm"><ExternalLink className="size-4" aria-hidden /> View in store</ButtonLink>}
       />
-      <ProductForm product={product} categories={categories} />
+      <ProductForm product={product} categories={categories} brands={brands.map((b) => ({ slug: b.slug, name: b.name }))} stores={stores.map((s) => ({ id: s.id, name: s.name }))} />
     </>
   );
 }

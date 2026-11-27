@@ -12,7 +12,7 @@ export default function NotFound() {
           icon={Compass}
           title="Page not found"
           description="This page doesn't exist or has moved."
-          action={<ButtonLink href="/">Go to Shupzy home</ButtonLink>}
+          action={<ButtonLink href="/">Go to Alaba home</ButtonLink>}
         />
       </div>
     </main>

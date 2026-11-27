@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import { nigerianStates, pickupPoints } from "@/lib/data/settings";
+import { carriers, nigerianStates, pickupPoints } from "@/lib/data/settings";
+import { balance, ledger } from "@/lib/loyalty";
+import { getMyOrders } from "@/lib/orders";
 import { CheckoutForm } from "./checkout-form";
 
 export const metadata: Metadata = {
@@ -8,5 +10,5 @@ export const metadata: Metadata = {
 };
 
 export default function CheckoutPage() {
-  return <CheckoutForm states={nigerianStates} pickupPoints={pickupPoints} />;
+  return <CheckoutForm states={nigerianStates} pickupPoints={pickupPoints} carriers={carriers} points={balance(ledger(getMyOrders())).available} />;
 }

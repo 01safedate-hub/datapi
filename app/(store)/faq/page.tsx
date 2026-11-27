@@ -7,14 +7,14 @@ import { whatsappLink } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Frequently asked questions",
-  description: "Answers about prices, shipping times, payments, customs, refunds and tracking on Shupzy.",
+  description: "Answers about prices, shipping times, payments, customs, refunds and tracking on Alaba.",
   alternates: { canonical: "/faq" },
 };
 
 const faqs = [
   { q: "Are prices final?", a: "The item price is final. For imported items, shipping is an estimate until we weigh your item in China. If it's higher, we ask before charging; if it's lower, we refund the difference." },
   { q: "How long does delivery take?", a: "Local items: 1–4 days. Imported items: usually 10–18 days to Lagos, then 1–6 days to your state." },
-  { q: "How do I pay?", a: "Card, bank transfer or USSD through Paystack or Flutterwave. We never see or store your card details." },
+  { q: "How do I pay?", a: "Card, bank transfer or USSD through Paystack. We never see or store your card details." },
   { q: "Do I pay customs separately?", a: "No. Customs clearance is included in the shipping estimate you see before paying." },
   { q: "Can I cancel?", a: "Yes, for a full refund, until we've bought from the supplier (usually within 48 hours). After that, our refund policy applies." },
   { q: "What if my item arrives damaged or wrong?", a: "Report it within 48 hours of delivery from your order page or on WhatsApp with photos. We'll replace or refund it." },
@@ -46,7 +46,7 @@ export default function FaqPage() {
       <div className="rounded-card bg-gray-50 p-5">
         <p className="font-medium text-navy-900">Still have a question?</p>
         <p className="mt-1 text-sm">We usually reply on WhatsApp in under 10 minutes.</p>
-        <ButtonLink href={whatsappLink("Hi Shupzy, I have a question")} target="_blank" rel="noopener noreferrer" variant="accent" className="mt-4">Chat with us</ButtonLink>
+        <ButtonLink href={whatsappLink("Hi Alaba, I have a question")} target="_blank" rel="noopener noreferrer" variant="accent" className="mt-4">Chat with us</ButtonLink>
       </div>
     </ContentPage>
   );

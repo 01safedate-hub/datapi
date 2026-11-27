@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, CreditCard, Loader2, Lock, MapPin, ShoppingBag, Store, Truck } from "lucide-react";
+import { ChevronLeft, CreditCard, Loader2, Lock, MapPin, Package, ShieldCheck, ShoppingBag, Store, Truck } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -11,10 +11,13 @@ import { Button, ButtonLink } from "@/components/ui/button";
 import { Checkbox, Field, Input, Select } from "@/components/ui/form";
 import { Card, EmptyState, Skeleton } from "@/components/ui/misc";
 import { useHydrated } from "@/lib/hooks";
-import { quote, type Fulfilment } from "@/lib/pricing";
+import { maxRedeemKobo } from "@/lib/loyalty";
+import { lineTotalKobo, quote, type DeliveryChoice } from "@/lib/pricing";
+import { CarrierMark } from "@/components/store/carrier-mark";
+import type { Carrier } from "@/lib/data/settings";
 import { whatsappLink } from "@/lib/site";
-import { useCart } from "@/lib/store/cart";
-import type { PaymentProvider } from "@/lib/types";
+import { toQuoteLines, useCart } from "@/lib/store/cart";
+import type { CarrierId, PaymentProvider } from "@/lib/types";
 import { cn, formatNaira } from "@/lib/utils";
 import { placeOrder } from "./actions";
 
@@ -22,17 +25,19 @@ type Form = {
   email: string;
   phone: string;
   name: string;
-  method: "delivery" | "pickup";
+  method: "door" | "pickup";
+  carrier: CarrierId;
   address: string;
   city: string;
   state: string;
   pickupId: string;
   provider: PaymentProvider;
   whatsapp: boolean;
+  usePoints: boolean;
 };
 
-const DRAFT_KEY = "shupzy-checkout-draft";
-const empty: Form = { email: "", phone: "", name: "", method: "delivery", address: "", city: "", state: "", pickupId: "", provider: "paystack", whatsapp: true };
+const DRAFT_KEY = "alaba-checkout-draft";
+const empty: Form = { email: "", phone: "", name: "", method: "door", carrier: "gig", address: "", city: "", state: "", pickupId: "", provider: "paystack", whatsapp: true, usePoints: false };
 
 function readDraft(): Form {
   if (typeof window === "undefined") return empty;
@@ -43,10 +48,7 @@ function readDraft(): Form {
   }
 }
 
-const providers: { id: PaymentProvider; name: string; body: string }[] = [
-  { id: "paystack", name: "Paystack", body: "Card, bank transfer, USSD" },
-  { id: "flutterwave", name: "Flutterwave", body: "Card, bank transfer, USSD, OPay" },
-];
+const providers: { id: PaymentProvider; name: string; body: string }[] = [{ id: "paystack", name: "Paystack", body: "Card, bank transfer, USSD, Opay" }];
 
 function Step({ n, title, children }: { n: number; title: string; children: React.ReactNode }) {
   return (
@@ -60,7 +62,9 @@ function Step({ n, title, children }: { n: number; title: string; children: Reac
   );
 }
 
-export function CheckoutForm({ states, pickupPoints }: { states: string[]; pickupPoints: { id: string; name: string; address: string; feeKobo: number }[] }) {
+type Pickup = { id: string; name: string; address: string; state: string; feeKobo: number };
+
+export function CheckoutForm({ states, pickupPoints, carriers, points }: { states: string[]; pickupPoints: Pickup[]; carriers: Carrier[]; points: number }) {
   const router = useRouter();
   const hydrated = useHydrated();
   const lines = useCart((s) => s.lines);
@@ -98,9 +102,17 @@ export function CheckoutForm({ states, pickupPoints }: { states: string[]; picku
     if (errors[k]) setErrors(({ [k]: _drop, ...rest }) => rest);
   };
 
-  const fulfilment: Fulfilment | null =
-    form.method === "pickup" ? (form.pickupId ? { method: "pickup", pickupId: form.pickupId } : null) : form.state ? { method: "delivery", state: form.state } : null;
-  const q = quote(lines, fulfilment, coupon);
+  const pickupState = pickupPoints.find((p) => p.id === form.pickupId)?.state;
+  const destState = form.method === "pickup" ? pickupState : form.state || undefined;
+  const delivery: DeliveryChoice | null = destState ? { state: destState, carrier: form.carrier, method: form.method } : null;
+  const itemsKobo = lines.reduce((s, l) => s + lineTotalKobo(l), 0);
+  const redeemable = maxRedeemKobo(points, itemsKobo);
+  const q = quote(toQuoteLines(lines), delivery, coupon, form.usePoints ? redeemable : 0);
+  const fulfilment = delivery;
+  const carrier = carriers.find((c) => c.id === form.carrier)!;
+  const chooseCarrier = (id: CarrierId) => {
+    setForm((f) => ({ ...f, carrier: id, method: carriers.find((c) => c.id === id)!.methods.includes(f.method) ? f.method : "door" }));
+  };
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -108,7 +120,7 @@ export function CheckoutForm({ states, pickupPoints }: { states: string[]; picku
       const res = await placeOrder({
         ...form,
         coupon: coupon?.code ?? null,
-        lines: lines.map((l) => ({ productId: l.productId, quantity: l.quantity, options: l.options })),
+        lines: lines.map((l) => ({ productId: l.productId, variantId: l.variantId, quantity: l.quantity })),
       });
       if (!res.ok) {
         setErrors(res.fieldErrors ?? {});
@@ -153,23 +165,42 @@ export function CheckoutForm({ states, pickupPoints }: { states: string[]; picku
           </Step>
 
           <Step n={2} title="Delivery">
+            <fieldset className="mb-5">
+              <legend className="mb-2 text-sm font-medium">Choose your courier</legend>
+              <div role="radiogroup" className="grid grid-cols-2 gap-3">
+                {carriers.filter((c) => c.active).map((c) => (
+                  <label key={c.id} className={cn("grid cursor-pointer gap-2 rounded-lg border p-3 transition-colors sm:p-4", form.carrier === c.id ? "border-navy-900 ring-1 ring-navy-900" : "border-gray-300 hover:border-gray-400")}>
+                    <input type="radio" name="carrier" className="sr-only" checked={form.carrier === c.id} onChange={() => chooseCarrier(c.id)} />
+                    <CarrierMark id={c.id} name={c.name} short={c.short} logo={c.logo} />
+                    <span>
+                      <span className="block text-sm font-semibold">{c.name}</span>
+                      <span className="text-xs text-gray-600">{c.methods.includes("pickup") ? "Door or pickup station" : "Door delivery"} · {c.rates.sameState.days[0]}–{c.rates.national.days[1]} days</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+
             <div role="radiogroup" aria-label="Delivery method" className="mb-5 grid grid-cols-2 gap-3">
               {[
-                { v: "delivery" as const, icon: Truck, title: "Doorstep delivery", body: "Anywhere in Nigeria" },
-                { v: "pickup" as const, icon: Store, title: "Pickup hub", body: "Free in Lagos" },
-              ].map((o) => (
-                <label key={o.v} className={cn("flex cursor-pointer items-start gap-2.5 rounded-lg border p-3 transition-colors sm:gap-3 sm:p-4", form.method === o.v ? "border-navy-900 ring-1 ring-navy-900" : "border-gray-300 hover:border-gray-400")}>
-                  <input type="radio" name="method" className="sr-only" checked={form.method === o.v} onChange={() => set("method", o.v)} />
-                  <o.icon className="mt-0.5 size-5 shrink-0 text-brand-600" aria-hidden />
-                  <span>
-                    <span className="block text-sm font-semibold">{o.title}</span>
-                    <span className="text-xs text-gray-600">{o.body}</span>
-                  </span>
-                </label>
-              ))}
+                { v: "door" as const, icon: Truck, title: "Doorstep delivery", body: "Anywhere in Nigeria" },
+                { v: "pickup" as const, icon: Store, title: "Pickup station", body: carrier.methods.includes("pickup") ? `${Math.round(carrier.pickupDiscount * 100)}% cheaper` : "Jumia only" },
+              ].map((o) => {
+                const disabled = !carrier.methods.includes(o.v);
+                return (
+                  <label key={o.v} className={cn("flex items-start gap-2.5 rounded-lg border p-3 transition-colors sm:gap-3 sm:p-4", disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer", form.method === o.v ? "border-navy-900 ring-1 ring-navy-900" : "border-gray-300 hover:border-gray-400")}>
+                    <input type="radio" name="method" className="sr-only" disabled={disabled} checked={form.method === o.v} onChange={() => set("method", o.v)} />
+                    <o.icon className="mt-0.5 size-5 shrink-0 text-brand-600" aria-hidden />
+                    <span>
+                      <span className="block text-sm font-semibold">{o.title}</span>
+                      <span className="text-xs text-gray-600">{o.body}</span>
+                    </span>
+                  </label>
+                );
+              })}
             </div>
 
-            {form.method === "delivery" ? (
+            {form.method === "door" ? (
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Street address" htmlFor="address" error={err("address")} className="sm:col-span-2">
                   <Input id="address" autoComplete="street-address" placeholder="House number and street" value={form.address} onChange={(e) => set("address", e.target.value)} {...inv("address")} />
@@ -186,14 +217,14 @@ export function CheckoutForm({ states, pickupPoints }: { states: string[]; picku
               </div>
             ) : (
               <fieldset>
-                <legend className="sr-only">Pickup hub</legend>
+                <legend className="sr-only">Pickup station</legend>
                 <div className="grid gap-2">
                   {pickupPoints.map((p) => (
                     <label key={p.id} className={cn("flex cursor-pointer items-start gap-3 rounded-lg border p-4", form.pickupId === p.id ? "border-navy-900 ring-1 ring-navy-900" : "border-gray-300 hover:border-gray-400")}>
                       <input type="radio" name="pickup" className="mt-1 size-4 accent-navy-900" checked={form.pickupId === p.id} onChange={() => set("pickupId", p.id)} />
                       <MapPin className="mt-0.5 size-4.5 shrink-0 text-brand-600" aria-hidden />
                       <span className="flex-1">
-                        <span className="flex justify-between gap-2 text-sm font-semibold">{p.name}<span className="font-medium">{p.feeKobo ? formatNaira(p.feeKobo) : "Free"}</span></span>
+                        <span className="block text-sm font-semibold">{p.name}</span>
                         <span className="text-sm text-gray-600">{p.address}</span>
                       </span>
                     </label>
@@ -202,10 +233,36 @@ export function CheckoutForm({ states, pickupPoints }: { states: string[]; picku
                 {err("pickupId") && <p id="pickupId-error" role="alert" className="mt-2 text-sm text-red-600">{err("pickupId")}</p>}
               </fieldset>
             )}
+
+            {q.stores.length > 0 && (
+              <div className="mt-5 grid gap-2 rounded-lg bg-gray-50 p-4">
+                <p className="flex items-center gap-2 text-sm font-semibold">
+                  <Package className="size-4 text-brand-600" aria-hidden />
+                  {q.stores.length === 1 ? "1 shipment" : `${q.stores.length} shipments`}
+                  {q.stores.length > 1 && <span className="font-normal text-gray-600">· items come from different sellers</span>}
+                </p>
+                <ul className="grid gap-1.5 text-sm">
+                  {q.stores.map((s) => (
+                    <li key={s.storeId} className="flex items-start justify-between gap-3">
+                      <span className="min-w-0">
+                        <span className="block truncate">{s.storeName}</span>
+                        <span className="text-xs text-gray-500">
+                          {s.days ? `${s.days[0]}–${s.days[1]} days with ${carrier.short}` : "Choose a delivery address to see the price"}
+                          {s.reason ? ` · ${s.reason}` : ""}
+                        </span>
+                      </span>
+                      <span className={cn("shrink-0 font-medium tabular-nums", s.free && "text-green-700")}>
+                        {fulfilment ? (s.free ? "Free" : formatNaira(s.deliveryKobo)) : "—"}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </Step>
 
           <Step n={3} title="Payment">
-            <div role="radiogroup" aria-label="Payment provider" className="grid gap-3 sm:grid-cols-2">
+            <div role="radiogroup" aria-label="Payment provider" className="grid gap-3">
               {providers.map((p) => (
                 <label key={p.id} className={cn("flex cursor-pointer items-center gap-3 rounded-lg border p-4", form.provider === p.id ? "border-navy-900 ring-1 ring-navy-900" : "border-gray-300 hover:border-gray-400")}>
                   <input type="radio" name="provider" className="size-4 accent-navy-900" checked={form.provider === p.id} onChange={() => set("provider", p.id)} />
@@ -217,6 +274,21 @@ export function CheckoutForm({ states, pickupPoints }: { states: string[]; picku
                 </label>
               ))}
             </div>
+            {redeemable > 0 && (
+              <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 p-3 text-sm">
+                <Checkbox className="mt-0.5" checked={form.usePoints} onChange={(e) => set("usePoints", e.target.checked)} />
+                <span>
+                  <span className="font-medium">Use {Math.round(redeemable / 100).toLocaleString()} Alaba points</span>
+                  <span className="block text-gray-600">Save {formatNaira(redeemable)} · you have {points.toLocaleString()} points</span>
+                </span>
+              </label>
+            )}
+            <p className="mt-4 flex items-start gap-2.5 rounded-lg bg-brand-50 p-3 text-sm text-navy-900">
+              <ShieldCheck className="mt-0.5 size-4.5 shrink-0 text-brand-600" aria-hidden />
+              <span>
+                <strong className="font-semibold">Alaba Buyer Protection.</strong> Sellers are paid only after you confirm delivery. Never pay a seller directly, by transfer or outside Alaba.
+              </span>
+            </p>
             <label className="mt-5 flex cursor-pointer items-start gap-3 text-sm">
               <Checkbox className="mt-0.5" checked={form.whatsapp} onChange={(e) => set("whatsapp", e.target.checked)} />
               <span>Send order updates to my WhatsApp too <span className="block text-gray-500">Email updates are always on.</span></span>
@@ -234,12 +306,12 @@ export function CheckoutForm({ states, pickupPoints }: { states: string[]; picku
                   <span className="absolute -top-1 -right-1 grid size-5 place-items-center rounded-full bg-navy-900 text-[11px] text-white">{l.quantity}</span>
                 </span>
                 <span className="line-clamp-2 flex-1">{l.name}</span>
-                <span className="font-medium tabular-nums">{formatNaira(l.unitPriceKobo * l.quantity)}</span>
+                <span className="font-medium tabular-nums">{formatNaira(lineTotalKobo(l))}</span>
               </li>
             ))}
           </ul>
           <SummaryRows q={q} deliveryKnown={!!fulfilment} />
-          <Button type="submit" variant="accent" size="lg" className="w-full" loading={pending} loadingText={`Connecting to ${form.provider === "paystack" ? "Paystack" : "Flutterwave"}…`}>
+          <Button type="submit" variant="accent" size="lg" className="w-full" loading={pending} loadingText="Connecting to Paystack…">
             <Lock className="size-4" aria-hidden />
             Pay {formatNaira(q.totalKobo)}
           </Button>
@@ -247,7 +319,7 @@ export function CheckoutForm({ states, pickupPoints }: { states: string[]; picku
             Demo mode: no real payment is taken. By paying you agree to our <Link href="/terms" className="underline">terms</Link> and{" "}
             <Link href="/refund-policy" className="underline">refund policy</Link>.
           </p>
-          <a href={whatsappLink("Hi Shupzy, I need help with checkout")} target="_blank" rel="noopener noreferrer" className="text-center text-sm font-medium text-brand-600 hover:underline">
+          <a href={whatsappLink("Hi Alaba, I need help with checkout")} target="_blank" rel="noopener noreferrer" className="text-center text-sm font-medium text-brand-600 hover:underline">
             Stuck? Chat with us on WhatsApp
           </a>
         </Card>

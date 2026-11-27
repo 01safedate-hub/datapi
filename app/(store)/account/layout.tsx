@@ -3,7 +3,7 @@ import { demoCustomer } from "@/lib/data/ops";
 import { AccountNav } from "./account-nav";
 
 export const metadata: Metadata = {
-  title: { default: "My account", template: "%s · My account · Shupzy" },
+  title: { default: "My account", template: "%s · My account · Alaba" },
   robots: { index: false, follow: false },
 };
 

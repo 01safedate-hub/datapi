@@ -8,12 +8,12 @@ import { whatsappLink } from "@/lib/site";
 /** Always-available help: a WhatsApp button that knows which page you're on. */
 export function WhatsAppFab() {
   const pathname = usePathname();
-  if (pathname.startsWith("/checkout")) return null;
+  if (pathname.startsWith("/checkout") || pathname.startsWith("/messages")) return null;
   // Account and cart pages have their own help links; on phones the floating button would cover their buttons.
   const hideOnPhone = pathname.startsWith("/account") || pathname.startsWith("/cart");
   return (
     <a
-      href={whatsappLink(`Hi Shupzy, I need help (page: ${pathname})`)}
+      href={whatsappLink(`Hi Alaba, I need help (page: ${pathname})`)}
       target="_blank"
       rel="noopener noreferrer"
       className={`fixed right-4 bottom-20 z-30 ${hideOnPhone ? "hidden md:flex" : "flex"} h-12 items-center gap-2 rounded-full bg-navy-900 pr-4 pl-3.5 text-sm font-medium text-white shadow-drawer transition-transform hover:-translate-y-0.5 md:bottom-6`}

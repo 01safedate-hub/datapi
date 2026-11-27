@@ -1,4 +1,4 @@
--- Shupzy initial schema.
+-- Alaba initial schema.
 -- Money: integer kobo (NGN) and fen (RMB). Never floats.
 
 create extension if not exists pg_trgm with schema extensions;

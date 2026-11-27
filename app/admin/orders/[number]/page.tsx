@@ -90,7 +90,7 @@ export default async function AdminOrderPage({ params }: { params: Params }) {
               </dl>
               <dl className="grid content-start gap-2 text-sm">
                 <p className="text-xs font-medium tracking-wide text-gray-500 uppercase">Our costs</p>
-                {[["Supplier (at ₦" + o.fxRate + "/¥)", c.supplierKobo], ["Air freight & clearance", c.intlShippingKobo], ["Courier", c.localDeliveryKobo], [`${o.provider === "paystack" ? "Paystack" : "Flutterwave"} fee`, t.gatewayFeeKobo]].map(([l, v]) => (
+                {[["Supplier (at ₦" + o.fxRate + "/¥)", c.supplierKobo], ["Air freight & clearance", c.intlShippingKobo], ["Courier", c.localDeliveryKobo], ["Paystack fee", t.gatewayFeeKobo]].map(([l, v]) => (
                   <div key={l as string} className="flex justify-between"><dt className="text-gray-600">{l}</dt><dd className="tabular-nums">{formatNaira(v as number)}</dd></div>
                 ))}
                 <div className="flex justify-between border-t border-gray-200 pt-2 font-semibold">

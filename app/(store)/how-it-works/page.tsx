@@ -6,13 +6,13 @@ import { ButtonLink } from "@/components/ui/button";
 
 export const metadata: Metadata = {
   title: "How it works",
-  description: "How Shupzy buys from Chinese suppliers, ships to Lagos and delivers to you — with the full price in naira before you pay.",
+  description: "How Alaba buys from Chinese suppliers, ships to Lagos and delivers to you — with the full price in naira before you pay.",
   alternates: { canonical: "/how-it-works" },
 };
 
 export default function HowItWorksPage() {
   return (
-    <ContentPage title="How Shupzy works" intro="You shop in naira. We deal with suppliers, freight, customs and delivery.">
+    <ContentPage title="How Alaba works" intro="You shop in naira. We deal with suppliers, freight, customs and delivery.">
       <HowItWorksSteps />
       <h2>Imported products</h2>
       <p>

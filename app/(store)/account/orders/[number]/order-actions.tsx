@@ -51,7 +51,7 @@ export function BalanceApproval({ number, balanceKobo, note }: { number: string;
         >
           <Lock className="size-4" aria-hidden /> Approve and pay
         </Button>
-        <a href={whatsappLink(`Hi Shupzy, question about the shipping balance on ${number}`)} target="_blank" rel="noopener noreferrer" className="inline-flex h-11 items-center rounded-lg border border-gray-300 bg-white px-5 font-medium hover:border-navy-900">
+        <a href={whatsappLink(`Hi Alaba, question about the shipping balance on ${number}`)} target="_blank" rel="noopener noreferrer" className="inline-flex h-11 items-center rounded-lg border border-gray-300 bg-white px-5 font-medium hover:border-navy-900">
           Ask a question
         </a>
       </div>

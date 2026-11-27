@@ -44,6 +44,12 @@ export function SummaryRows({ q, deliveryKnown }: { q: Quote; deliveryKnown: boo
           <dd className="font-medium tabular-nums">−{formatNaira(q.discountKobo)}</dd>
         </div>
       )}
+      {q.loyaltyKobo > 0 && (
+        <div className="flex justify-between gap-4 text-green-700">
+          <dt>Alaba points</dt>
+          <dd className="font-medium tabular-nums">−{formatNaira(q.loyaltyKobo)}</dd>
+        </div>
+      )}
       <div className="mt-1 flex items-baseline justify-between gap-4 border-t border-gray-200 pt-3">
         <dt className="font-semibold">Total</dt>
         <dd className="text-xl font-semibold tabular-nums">{formatNaira(q.totalKobo)}</dd>

@@ -82,12 +82,36 @@ function FilterFields({ categories }: { categories?: Props["categories"] }) {
       )}
 
       <fieldset>
+        <legend className="mb-2 text-sm font-semibold">Seller</legend>
+        <div className="grid gap-1.5 text-sm">
+          {[
+            { v: "", l: "All sellers" },
+            { v: "manufacturer", l: "Manufacturers" },
+            { v: "vendor", l: "Vendors & retailers" },
+          ].map((o) => (
+            <label key={o.v} className="flex cursor-pointer items-center gap-2.5 py-1">
+              <input type="radio" name={`${group}-seller`} className="size-4 accent-navy-900" checked={(params.get("seller") ?? "") === o.v} onChange={() => set({ seller: o.v || null })} />
+              {o.l}
+            </label>
+          ))}
+          <label className="flex cursor-pointer items-center gap-2.5 py-1">
+            <Checkbox checked={params.get("verified") === "1"} onChange={(e) => set({ verified: e.target.checked ? "1" : null })} />
+            Verified sellers only
+          </label>
+          <label className="flex cursor-pointer items-center gap-2.5 py-1">
+            <Checkbox checked={params.get("wholesale") === "1"} onChange={(e) => set({ wholesale: e.target.checked ? "1" : null })} />
+            Wholesale prices available
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset>
         <legend className="mb-2 text-sm font-semibold">Ships from</legend>
         <div className="grid gap-1.5 text-sm">
           {[
             { v: "", l: "Everywhere" },
-            { v: "imported", l: "Imported (10–18 days)" },
-            { v: "local", l: "Local stock (1–4 days)" },
+            { v: "imported", l: "Imported by Alaba (10–18 days)" },
+            { v: "local", l: "Within Nigeria (1–7 days)" },
           ].map((o) => (
             <label key={o.v} className="flex cursor-pointer items-center gap-2.5 py-1">
               <input type="radio" name={`${group}-source`} className="size-4 accent-navy-900" checked={source === o.v} onChange={() => set({ source: o.v || null })} />
@@ -136,7 +160,10 @@ function FilterFields({ categories }: { categories?: Props["categories"] }) {
 }
 
 const labels: Record<string, (v: string) => string> = {
-  source: (v) => (v === "local" ? "Local stock" : "Imported"),
+  source: (v) => (v === "local" ? "Within Nigeria" : "Imported"),
+  seller: (v) => (v === "manufacturer" ? "Manufacturers" : "Vendors"),
+  verified: () => "Verified sellers",
+  wholesale: () => "Wholesale",
   min: (v) => `From ₦${Number(v).toLocaleString()}`,
   max: (v) => `Up to ₦${Number(v).toLocaleString()}`,
   stock: () => "In stock",
@@ -177,7 +204,7 @@ export function ListingToolbar({ total, sortOptions, categories }: Props) {
               <X className="size-3.5" aria-label="Remove filter" />
             </button>
           ))}
-          <button type="button" onClick={() => set({ source: null, min: null, max: null, stock: null, fast: null })} className="text-xs font-medium text-brand-600 hover:underline">
+          <button type="button" onClick={() => set({ source: null, min: null, max: null, stock: null, fast: null, seller: null, verified: null, wholesale: null })} className="text-xs font-medium text-brand-600 hover:underline">
             Clear all
           </button>
         </div>

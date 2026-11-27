@@ -21,7 +21,7 @@ export default function SupportPage() {
           <p className="font-semibold">Fastest answer: WhatsApp</p>
           <p className="text-sm text-gray-600">Mon–Sat, 8am–8pm. Average reply under 10 minutes.</p>
         </div>
-        <ButtonLink href={whatsappLink("Hi Shupzy, I need help")} target="_blank" rel="noopener noreferrer" variant="accent">Chat on WhatsApp</ButtonLink>
+        <ButtonLink href={whatsappLink("Hi Alaba, I need help")} target="_blank" rel="noopener noreferrer" variant="accent">Chat on WhatsApp</ButtonLink>
       </Card>
 
       <div className="flex items-center justify-between">

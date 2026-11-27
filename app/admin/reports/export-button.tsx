@@ -10,7 +10,7 @@ export function ExportButton({ rows }: { rows: Record<string, string | number>[]
     <Button
       variant="outline"
       onClick={() => {
-        downloadCsv(`shupzy-pnl-${new Date().toISOString().slice(0, 10)}.csv`, rows);
+        downloadCsv(`alaba-pnl-${new Date().toISOString().slice(0, 10)}.csv`, rows);
         toast.success("Report exported", { description: "Opens in Excel or Google Sheets." });
       }}
     >

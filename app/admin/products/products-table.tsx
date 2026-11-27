@@ -70,7 +70,7 @@ export function ProductsTable({ rows }: { rows: ProductRow[] }) {
           variant="outline"
           className="h-10"
           onClick={() => {
-            downloadCsv("shupzy-products.csv", list.map((r) => ({ id: r.id, name: r.name, category: r.category, source: r.source, status: r.status, availability: r.availability, stock: r.stock ?? "", supplier_price_rmb: r.supplierFen ? r.supplierFen / 100 : "", price_ngn: r.priceKobo / 100 })));
+            downloadCsv("alaba-products.csv", list.map((r) => ({ id: r.id, name: r.name, category: r.category, source: r.source, status: r.status, availability: r.availability, stock: r.stock ?? "", supplier_price_rmb: r.supplierFen ? r.supplierFen / 100 : "", price_ngn: r.priceKobo / 100 })));
             toast.success(`Exported ${list.length} products`);
           }}
         >

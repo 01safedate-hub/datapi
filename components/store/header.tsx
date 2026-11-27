@@ -1,4 +1,4 @@
-import { Heart, Truck, User } from "lucide-react";
+import { Heart, MessageCircle, ShieldCheck, User } from "lucide-react";
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { getCategories, getSearchIndex } from "@/lib/catalog";
@@ -15,10 +15,11 @@ export function Header() {
       <div className="hidden bg-navy-900 text-white sm:block">
         <div className="container-page flex h-9 items-center justify-between text-[13px]">
           <p className="flex items-center gap-2">
-            <Truck className="size-4 text-orange-500" aria-hidden />
-            Imported in 10–18 days · Local orders in 1–3 days · Prices in naira
+            <ShieldCheck className="size-4 text-orange-500" aria-hidden />
+            Buy direct from Nigerian makers &amp; sellers · Buyer Protection on every order
           </p>
           <nav aria-label="Help" className="flex gap-5 text-white/80">
+            <Link href="/sell" className="font-medium text-orange-400 hover:text-orange-300">Sell on Alaba</Link>
             <Link href="/how-it-works" className="hover:text-white">How it works</Link>
             <Link href="/track" className="hover:text-white">Track order</Link>
             <Link href="/contact" className="hover:text-white">Help</Link>
@@ -31,6 +32,9 @@ export function Header() {
         <Logo />
         <SearchBox index={index} className="hidden flex-1 md:block md:max-w-2xl" />
         <nav aria-label="Account" className="ml-auto flex items-center gap-1">
+          <Link href="/messages" className="hidden size-10 place-items-center rounded-lg hover:bg-gray-100 sm:grid" aria-label="Messages">
+            <MessageCircle className="size-5" />
+          </Link>
           <Link href="/account/wishlist" className="hidden size-10 place-items-center rounded-lg hover:bg-gray-100 sm:grid" aria-label="Wishlist">
             <Heart className="size-5" />
           </Link>
@@ -57,7 +61,13 @@ export function Header() {
             </li>
           ))}
           <li className="ml-auto">
-            <Link href="/shop?source=local" className="font-medium whitespace-nowrap text-orange-600 hover:underline">Fast delivery</Link>
+            <Link href="/manufacturers" className="font-medium whitespace-nowrap text-navy-900 hover:text-brand-600">Manufacturers</Link>
+          </li>
+          <li>
+            <Link href="/brands" className="font-medium whitespace-nowrap text-navy-900 hover:text-brand-600">Brands</Link>
+          </li>
+          <li>
+            <Link href="/shop?source=imported" className="font-medium whitespace-nowrap text-orange-600 hover:underline">Imported</Link>
           </li>
         </ul>
       </nav>

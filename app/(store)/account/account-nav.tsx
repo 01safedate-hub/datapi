@@ -1,6 +1,6 @@
 "use client";
 
-import { CreditCard, Heart, LayoutDashboard, LifeBuoy, LogOut, MapPin, Package, Settings } from "lucide-react";
+import { CreditCard, Gift, Heart, LayoutDashboard, LifeBuoy, LogOut, MapPin, MessageCircle, Package, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
@@ -12,6 +12,8 @@ const items = [
   { href: "/account/orders", label: "Orders", icon: Package },
   { href: "/account/payments", label: "Payments", icon: CreditCard },
   { href: "/account/addresses", label: "Addresses", icon: MapPin },
+  { href: "/messages", label: "Messages", icon: MessageCircle },
+  { href: "/account/rewards", label: "Rewards", icon: Gift },
   { href: "/account/wishlist", label: "Wishlist", icon: Heart },
   { href: "/account/support", label: "Support", icon: LifeBuoy },
   { href: "/account/settings", label: "Settings", icon: Settings },

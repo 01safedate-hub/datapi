@@ -19,7 +19,7 @@ export function MobileTabBar() {
   const hydrated = useHydrated();
   const count = useCart((s) => cartCount(s.lines));
   // Checkout has its own sticky pay bar; keep the screen focused.
-  if (pathname.startsWith("/checkout")) return null;
+  if (pathname.startsWith("/checkout") || pathname.startsWith("/messages")) return null;
 
   return (
     <nav aria-label="Primary" className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95 pb-safe backdrop-blur md:hidden">

@@ -1,15 +1,19 @@
 export const site = {
-  name: "Shupzy",
-  tagline: "Imported and local products, priced in naira.",
+  name: "Alaba",
+  legalName: "Alaba Marketplace",
+  tagline: "Buy direct from Nigerian manufacturers, importers and sellers.",
   description:
-    "Shop thousands of products imported from China and sourced locally. Clear naira prices, shipping shown upfront, and tracking from warehouse to your door anywhere in Nigeria.",
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://shupzy.com",
-  email: "support@shupzy.com",
+    "Alaba connects buyers directly to verified Nigerian manufacturers, importers and sellers. Fair prices without middlemen, Alaba Buyer Protection on every order, and delivery across Nigeria with GIG or Jumia.",
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://alaba.ng",
+  domain: "alaba.ng",
+  email: "support@alaba.ng",
+  sellerEmail: "sellers@alaba.ng",
   phone: "+234 800 000 0000",
   whatsapp: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "2348000000000",
-  address: "Ikeja, Lagos, Nigeria",
+  address: "Ojo, Lagos, Nigeria",
   locale: "en_NG",
-  themeColor: "#0b1b3f",
+  themeColor: "#0a1a52",
+  platformStoreSlug: "alaba-verified",
 } as const;
 
 export function whatsappLink(message?: string) {

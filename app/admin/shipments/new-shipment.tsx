@@ -8,7 +8,7 @@ import { Checkbox, Field, Input, Select } from "@/components/ui/form";
 import { Sheet } from "@/components/ui/sheet";
 import { shippingAgents } from "@/lib/data/settings";
 
-const ready = ["SHZ-10500", "SHZ-10495"];
+const ready = ["ALB-10500", "ALB-10495"];
 
 export function NewShipment() {
   const [open, setOpen] = useState(false);

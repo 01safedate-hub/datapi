@@ -21,7 +21,7 @@ export function OrdersTable({ orders: initial, staff }: { orders: Order[]; staff
   const [orders, setOrders] = useState(initial);
   const [q, setQ] = useState("");
   const [stage, setStage] = useState(params.get("stage") ?? "");
-  const [provider, setProvider] = useState("");
+  const [seller, setSeller] = useState(params.get("store") ?? "");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkStage, setBulkStage] = useState("");
 
@@ -30,10 +30,10 @@ export function OrdersTable({ orders: initial, staff }: { orders: Order[]; staff
     return orders.filter(
       (o) =>
         (!stage || o.stage === stage) &&
-        (!provider || o.provider === provider) &&
+        (!seller || o.storeOrders.some((so) => so.storeId === seller)) &&
         (!term || [o.number, o.customerName, o.email, o.phone].some((f) => f.toLowerCase().includes(term))),
     );
-  }, [orders, q, stage, provider]);
+  }, [orders, q, stage, seller]);
 
   const allOn = rows.length > 0 && rows.every((r) => selected.has(r.id));
   const toggle = (id: string) => setSelected((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
@@ -62,18 +62,19 @@ export function OrdersTable({ orders: initial, staff }: { orders: Order[]; staff
           <option value="">All stages</option>
           {stages.map((s) => <option key={s} value={s}>{stageMeta[s].label}</option>)}
         </Select>
-        <Select aria-label="Filter by payment provider" value={provider} onChange={(e) => setProvider(e.target.value)} className="h-10 w-auto">
-          <option value="">All gateways</option>
-          <option value="paystack">Paystack</option>
-          <option value="flutterwave">Flutterwave</option>
+        <Select aria-label="Filter by seller" value={seller} onChange={(e) => setSeller(e.target.value)} className="h-10 w-auto">
+          <option value="">All sellers</option>
+          {[...new Map(orders.flatMap((o) => o.storeOrders.map((so) => [so.storeId, so.storeName] as const))).entries()].map(([id, name]) => (
+            <option key={id} value={id}>{name}</option>
+          ))}
         </Select>
         <Button
           variant="outline"
           className="h-10"
           onClick={() => {
-            downloadCsv(`shupzy-orders-${new Date().toISOString().slice(0, 10)}.csv`, rows.map((o) => ({
+            downloadCsv(`alaba-orders-${new Date().toISOString().slice(0, 10)}.csv`, rows.map((o) => ({
               order: o.number, date: o.createdAt, customer: o.customerName, email: o.email, phone: o.phone, state: o.address.state,
-              stage: stageMeta[o.stage].label, gateway: o.provider, total_ngn: o.totals.totalKobo / 100, paid_ngn: o.totals.paidKobo / 100, balance_ngn: o.totals.balanceDueKobo / 100,
+              stage: stageMeta[o.stage].label, sellers: o.storeOrders.map((so) => so.storeName).join(" + "), carrier: o.carrier, total_ngn: o.totals.totalKobo / 100, paid_ngn: o.totals.paidKobo / 100, balance_ngn: o.totals.balanceDueKobo / 100,
             })));
             toast.success(`Exported ${rows.length} orders`);
           }}
@@ -128,7 +129,7 @@ export function OrdersTable({ orders: initial, staff }: { orders: Order[]; staff
               </tr>
             ))}
             {!rows.length && (
-              <tr><td colSpan={7} className="px-4 py-12 text-center text-gray-500">No orders match. <button type="button" className="font-medium text-brand-600 hover:underline" onClick={() => { setQ(""); setStage(""); setProvider(""); }}>Clear filters</button></td></tr>
+              <tr><td colSpan={7} className="px-4 py-12 text-center text-gray-500">No orders match. <button type="button" className="font-medium text-brand-600 hover:underline" onClick={() => { setQ(""); setStage(""); setSeller(""); }}>Clear filters</button></td></tr>
             )}
           </tbody>
         </table>

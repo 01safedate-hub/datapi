@@ -22,5 +22,9 @@ export function parseListingParams(sp: Record<string, string | string[] | undefi
     inStock: one(sp.stock) === "1",
     fast: one(sp.fast) === "1",
     sort: sort && sorts.includes(sort) ? sort : undefined,
+    sellerType: one(sp.seller) === "manufacturer" || one(sp.seller) === "vendor" ? (one(sp.seller) as "manufacturer" | "vendor") : undefined,
+    verifiedOnly: one(sp.verified) === "1",
+    wholesale: one(sp.wholesale) === "1",
+    brand: one(sp.brand)?.slice(0, 60),
   };
 }

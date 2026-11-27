@@ -13,5 +13,11 @@ export async function ogFonts() {
   ];
 }
 
+/** The Alaba mark as a data URL for OG images. */
+export async function ogLogo() {
+  const buf = await readFile(join(process.cwd(), "public/og-mark.png"));
+  return `data:image/png;base64,${buf.toString("base64")}`;
+}
+
 /** Geist has no ₦ glyph, so OG images spell the currency out. */
 export const ogNaira = (kobo: number) => `NGN ${Math.round(kobo / 100).toLocaleString("en-NG")}`;

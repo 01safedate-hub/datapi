@@ -1,4 +1,4 @@
-import { CalendarClock, PackageCheck, Plane, RotateCcw, ShieldCheck, Truck } from "lucide-react";
+import { BadgeCheck, CalendarClock, PackageCheck, Plane, PlayCircle, ShieldCheck, Truck } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -6,9 +6,10 @@ import { JsonLd } from "@/components/json-ld";
 import { Gallery } from "@/components/store/gallery";
 import { ProductGrid, SourceBadge } from "@/components/store/product-card";
 import { ProductPurchase } from "@/components/store/product-purchase";
-import { Badge, Breadcrumbs, Callout, Price, Rating, SectionHeader, Stars } from "@/components/ui/misc";
+import { Badge, Breadcrumbs, Callout, Rating, SectionHeader, Stars } from "@/components/ui/misc";
 import { getCategory, getProduct, getRelated, getReviews, queryProducts } from "@/lib/catalog";
-import { deliveryZones } from "@/lib/data/settings";
+import { parseVideoLink } from "@/lib/video";
+import { SellerCard } from "@/components/store/seller-card";
 import { site } from "@/lib/site";
 import { formatDate, formatKg, formatNaira } from "@/lib/utils";
 
@@ -42,14 +43,8 @@ export default async function ProductPage({ params }: { params: Params }) {
   const category = getCategory(p.category);
   const reviews = getReviews(p.id);
   const related = getRelated(p);
-  const lagos = deliveryZones[0]!;
   const imported = p.source === "imported";
-
-  const breakdown = [
-    { label: "Item price", value: formatNaira(p.priceKobo) },
-    ...(imported ? [{ label: `Est. shipping & customs (${formatKg(p.estWeightKg)})`, value: formatNaira(p.estShippingKobo) }] : []),
-    { label: "Delivery in Lagos", value: `from ${formatNaira(lagos.baseKobo)}` },
-  ];
+  const video = p.videoUrl ? parseVideoLink(p.videoUrl) : null;
 
   return (
     <>
@@ -60,8 +55,8 @@ export default async function ProductPage({ params }: { params: Params }) {
             "@type": "Product",
             name: p.name,
             description: p.description,
-            sku: p.id,
-            brand: { "@type": "Brand", name: p.brand },
+            sku: p.variants[0]?.sku ?? p.id,
+            brand: { "@type": "Brand", name: p.brandName },
             category: category?.name,
             image: p.images.map((i) => `${site.url}${i}`),
             aggregateRating: { "@type": "AggregateRating", ratingValue: p.rating, reviewCount: p.reviewCount },
@@ -70,6 +65,7 @@ export default async function ProductPage({ params }: { params: Params }) {
               url: `${site.url}/p/${p.slug}`,
               priceCurrency: "NGN",
               price: (p.priceKobo / 100).toFixed(2),
+              ...(p.variants.length > 1 ? { "@type": "AggregateOffer", lowPrice: (p.priceKobo / 100).toFixed(2), highPrice: (Math.max(...p.variants.map((v) => v.priceKobo)) / 100).toFixed(2), offerCount: p.variants.length } : {}),
               availability:
                 p.availability === "out_of_stock"
                   ? "https://schema.org/OutOfStock"
@@ -77,7 +73,7 @@ export default async function ProductPage({ params }: { params: Params }) {
                     ? "https://schema.org/PreOrder"
                     : "https://schema.org/InStock",
               itemCondition: "https://schema.org/NewCondition",
-              seller: { "@type": "Organization", name: site.name },
+              seller: { "@type": "Organization", name: p.store.name },
             },
           },
           {
@@ -104,7 +100,10 @@ export default async function ProductPage({ params }: { params: Params }) {
                 <SourceBadge source={p.source} />
                 {p.availability === "preorder" && <Badge tone="navy">Pre-order</Badge>}
                 {p.availability === "out_of_stock" && <Badge tone="bad">Sold out</Badge>}
-                <span className="text-sm text-gray-500">by {p.brand}</span>
+                <Link href={`/brands/${p.brand}`} className="inline-flex items-center gap-1 text-sm text-gray-600 hover:underline">
+                  {p.brandName}
+                  {p.brandOfficial && <BadgeCheck className="size-3.5 text-brand-600" aria-label="Official brand" />}
+                </Link>
               </div>
               <h1 className="text-2xl leading-tight font-semibold sm:text-3xl">{p.name}</h1>
               <a href="#reviews" className="w-fit hover:underline">
@@ -113,48 +112,53 @@ export default async function ProductPage({ params }: { params: Params }) {
               </a>
             </div>
 
-            <div className="grid gap-4 rounded-card border border-gray-200 p-5">
-              <Price kobo={p.priceKobo} compareAt={p.compareAtKobo} size="lg" />
-              <dl className="grid gap-1.5 text-sm">
-                {breakdown.map((b) => (
-                  <div key={b.label} className="flex justify-between gap-4">
-                    <dt className="text-gray-600">{b.label}</dt>
-                    <dd className="font-medium tabular-nums">{b.value}</dd>
-                  </div>
-                ))}
-              </dl>
-              {imported && (
-                <p className="text-xs leading-relaxed text-gray-500">
-                  Shipping is estimated from the supplier&apos;s weight. We weigh it at our China warehouse; if the real cost is higher we ask before charging anything, and if it&apos;s lower we refund the difference.
-                </p>
-              )}
-            </div>
-
             <ProductPurchase product={p} />
+
+            <SellerCard store={p.store} productSlug={p.slug} />
 
             <ul className="grid gap-3 rounded-card bg-gray-50 p-5 text-sm">
               <li className="flex gap-3">
                 <CalendarClock className="size-5 shrink-0 text-brand-600" aria-hidden />
                 <span>
                   <strong className="font-semibold">Arrives in {p.deliveryDays[0]}–{p.deliveryDays[1]} days</strong>
-                  <span className="block text-gray-600">{imported ? "Estimated: China warehouse → Lagos by air, then to your door." : "Ships from our Lagos warehouse."}</span>
+                  <span className="block text-gray-600">
+                    {imported ? "Imported from China: our warehouse → Lagos by air, then to your door." : `Ships from ${p.store.city}, ${p.store.state}.`}
+                  </span>
                 </span>
               </li>
               <li className="flex gap-3">
                 <Truck className="size-5 shrink-0 text-brand-600" aria-hidden />
-                <span>Doorstep delivery nationwide, or free pickup in Ikeja and Lekki.</span>
+                <span>{p.freeDelivery ? "Free delivery: shipping is included in the price." : "Delivered by GIG Logistics or Jumia Delivery, your choice at checkout."}</span>
               </li>
               <li className="flex gap-3">
                 <ShieldCheck className="size-5 shrink-0 text-brand-600" aria-hidden />
-                <span>Secure payment. No extra charge without your approval.</span>
-              </li>
-              <li className="flex gap-3">
-                <RotateCcw className="size-5 shrink-0 text-brand-600" aria-hidden />
                 <span>
-                  Full refund if we can&apos;t source it. <Link href="/refund-policy" className="text-brand-600 hover:underline">Refund policy</Link>
+                  <strong className="font-semibold">Alaba Buyer Protection.</strong> The seller is only paid after you confirm delivery. Pay on Alaba only.{" "}
+                  <Link href="/buyer-protection" className="text-brand-600 hover:underline">How it works</Link>
                 </span>
               </li>
+              {p.warranty && (
+                <li className="flex gap-3">
+                  <BadgeCheck className="size-5 shrink-0 text-brand-600" aria-hidden />
+                  <span>{p.warranty}</span>
+                </li>
+              )}
             </ul>
+
+            {video && (
+              <a
+                href={video.url}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+                className="flex items-center gap-3 rounded-card border border-gray-200 p-4 text-sm hover:border-navy-900"
+              >
+                <PlayCircle className="size-8 shrink-0 text-orange-500" aria-hidden />
+                <span className="grid">
+                  <span className="font-semibold">Watch the product video</span>
+                  <span className="text-gray-600">On {video.platform === "tiktok" ? "TikTok" : "Instagram"}. Opens in a new tab.</span>
+                </span>
+              </a>
+            )}
           </div>
         </div>
 
@@ -174,7 +178,7 @@ export default async function ProductPage({ params }: { params: Params }) {
           <section aria-labelledby="specs">
             <h2 id="specs" className="mb-3 text-xl font-semibold">Specifications</h2>
             <dl className="divide-y divide-gray-200 rounded-card border border-gray-200 text-sm">
-              {Object.entries({ Brand: p.brand, ...p.specs, "Est. weight": formatKg(p.estWeightKg), "Package size": `${p.dimsCm.join(" × ")} cm` }).map(([k, v]) => (
+              {Object.entries({ Brand: p.brandName, Condition: p.condition === "new" ? "Brand new" : p.condition === "refurbished" ? "Refurbished" : "Used", ...p.specs, ...(p.warranty ? { Warranty: p.warranty } : {}), "Weight": formatKg(p.estWeightKg), "Package size": `${p.dimsCm.join(" × ")} cm` }).map(([k, v]) => (
                 <div key={k} className="grid grid-cols-[40%_1fr] gap-4 px-4 py-2.5">
                   <dt className="text-gray-600">{k}</dt>
                   <dd className="font-medium">{v}</dd>
@@ -186,7 +190,7 @@ export default async function ProductPage({ params }: { params: Params }) {
 
         {imported && (
           <Callout icon={Plane} title="How imported orders work" className="mt-10">
-            After you pay, we buy from the supplier within 48 hours. Your item is checked and weighed at our China warehouse, flown to Lagos, cleared through customs and delivered. You get an email and WhatsApp update at every step.{" "}
+            Imported products are sourced and stocked by Alaba only. After you pay, we buy from the supplier within 48 hours; your item is checked and weighed at our China warehouse, flown to Lagos, cleared through customs and delivered in about {p.deliveryDays[0]}–{p.deliveryDays[1]} days. You get an email and WhatsApp update at every step.{" "}
             <Link href="/how-it-works" className="font-medium text-brand-600 hover:underline">Learn more</Link>
           </Callout>
         )}

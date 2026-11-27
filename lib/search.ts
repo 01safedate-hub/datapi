@@ -60,3 +60,46 @@ export function matchScore(query: string, fields: string[]) {
   if (name.includes(normalise(query))) total += 2;
   return total;
 }
+
+/**
+ * Query understanding: Nigerian shopping slang and common variants mapped to
+ * catalogue words, plus filler words dropped. Admin-editable in production
+ * (`search_synonyms` table); this list is the seed.
+ */
+export const synonyms: Record<string, string> = {
+  fone: "phone",
+  fones: "phone",
+  handset: "phone",
+  mobile: "phone",
+  powerbank: "power bank",
+  earpiece: "earbuds",
+  earphone: "earbuds",
+  earphones: "earbuds",
+  airpods: "earbuds",
+  lappy: "laptop",
+  notebook: "laptop",
+  gen: "generator",
+  tv: "projector",
+  sneaker: "sneakers",
+  canvas: "sneakers",
+  bag: "backpack",
+  fan: "fan",
+  nepa: "rechargeable",
+  "rechargable": "rechargeable",
+  watch: "smartwatch",
+  charger: "charger",
+  "ssd": "ssd",
+  shoe: "shoes",
+  loafer: "loafers",
+};
+
+const stopwords = new Set(["a", "an", "the", "for", "with", "and", "in", "of", "cheap", "best", "new", "original", "buy", "price", "naija", "nigeria"]);
+
+export function expandQuery(query: string) {
+  return query
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((w) => w && !stopwords.has(w))
+    .map((w) => synonyms[w] ?? w)
+    .join(" ") || query;
+}

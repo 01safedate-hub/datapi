@@ -4,7 +4,7 @@ import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Privacy policy",
-  description: "What personal data Shupzy collects, why, and your rights under the Nigeria Data Protection Act 2023.",
+  description: "What personal data Alaba collects, why, and your rights under the Nigeria Data Protection Act 2023.",
   alternates: { canonical: "/privacy" },
 };
 
@@ -15,7 +15,7 @@ export default function PrivacyPage() {
       <ul>
         <li>Contact details: name, email, phone number and delivery address.</li>
         <li>Order history and support messages.</li>
-        <li>Payment confirmations from Paystack or Flutterwave (never your full card number).</li>
+        <li>Payment confirmations from Paystack (never your full card number).</li>
         <li>Basic device and usage data to keep the site secure and fast.</li>
       </ul>
       <h2>How we use it</h2>

@@ -25,9 +25,9 @@ export default async function InvoicePage({ params }: { params: Params }) {
       <article className="rounded-card border border-gray-200 p-8 print:border-0 print:p-0">
         <header className="flex flex-wrap items-start justify-between gap-6 border-b border-gray-200 pb-6">
           <div className="flex items-center gap-3">
-            <Image src="/logo-mark.png" alt="" width={44} height={44} />
+            <Image src="/logo.png" alt="" width={66} height={42} className="h-10 w-auto" />
             <div>
-              <p className="text-xl font-semibold">Shupzy</p>
+              <p className="text-xl font-semibold">Alaba</p>
               <p className="text-sm text-gray-600">{site.address} · {site.email}</p>
             </div>
           </div>
@@ -88,7 +88,7 @@ export default async function InvoicePage({ params }: { params: Params }) {
             <dd className="tabular-nums">{formatNaira(t.totalKobo)}</dd>
           </div>
           <div className="flex justify-between gap-4 text-gray-600">
-            <dt>Paid via {order.provider === "paystack" ? "Paystack" : "Flutterwave"}</dt>
+            <dt>Paid via Paystack</dt>
             <dd className="tabular-nums">{formatNaira(t.paidKobo)}</dd>
           </div>
         </dl>

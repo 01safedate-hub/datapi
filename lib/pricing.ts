@@ -1,14 +1,10 @@
-import {
-  defaultAgent,
-  pickupPoints,
-  pricingSettings,
-  zoneForState,
-  type ShippingAgent,
-} from "./data/settings";
-import type { Discount, PaymentProvider, Product, ProductSource } from "./types";
+import { defaultAgent, pricingSettings, type ShippingAgent } from "./data/settings";
+import { storeById } from "./data/stores";
+import { quoteShipment } from "./delivery";
+import type { CarrierId, DeliveryMethod, Discount, PaymentProvider, Product, ProductSource, Variant, WholesaleTier } from "./types";
 
 /**
- * Shupzy pricing engine. Pure functions so the same maths runs on the server
+ * Alaba pricing engine. Pure functions so the same maths runs on the server
  * (authoritative) and in the browser (instant feedback). All money in kobo.
  */
 
@@ -18,13 +14,26 @@ export function markupFor(category: string) {
   return pricingSettings.categoryMarkup[category] ?? pricingSettings.defaultMarkup;
 }
 
-/** Customer-facing unit price in kobo. */
-export function unitPriceKobo(product: Pick<Product, "source" | "supplierPriceFen" | "priceKobo" | "category">) {
-  if (product.source === "local") return product.priceKobo ?? 0;
-  const fen = product.supplierPriceFen ?? 0;
+type PriceSource = Pick<Product, "source" | "supplierPriceFen" | "priceKobo" | "category">;
+
+/** Customer-facing price of one variant, in kobo. */
+export function variantPriceKobo(product: Pick<Product, "source" | "category">, variant: Pick<Variant, "supplierPriceFen" | "priceKobo">) {
+  if (product.source === "local") return variant.priceKobo ?? 0;
   // fen → yuan (÷100) → naira (× fx) → kobo (×100): the 100s cancel.
-  const costKobo = fen * pricingSettings.fxRate;
+  const costKobo = (variant.supplierPriceFen ?? 0) * pricingSettings.fxRate;
   return roundUp(costKobo * (1 + markupFor(product.category)));
+}
+
+/** Lowest customer-facing price of a product ("from ₦X"), in kobo. */
+export function unitPriceKobo(product: PriceSource & { variants?: Variant[] }) {
+  if (product.variants?.length) return Math.min(...product.variants.map((v) => variantPriceKobo(product, v)));
+  return variantPriceKobo(product, product);
+}
+
+/** Wholesale: the deepest tier the quantity qualifies for. */
+export function wholesaleUnitKobo(unitKobo: number, tiers: WholesaleTier[], quantity: number) {
+  const tier = [...tiers].sort((a, b) => b.minQty - a.minQty).find((t) => quantity >= t.minQty);
+  return tier ? roundUp(unitKobo * (1 - tier.discount), 5_000) : unitKobo;
 }
 
 export function volumetricKg(dimsCm: [number, number, number], divisor: number) {
@@ -48,16 +57,6 @@ export function estShippingKobo(
   return roundUp(kg * (agent.ratePerKgKobo + agent.clearancePerKgKobo));
 }
 
-export type Fulfilment = { method: "delivery"; state: string } | { method: "pickup"; pickupId: string };
-
-export function localDeliveryKobo(totalKg: number, fulfilment: Fulfilment) {
-  if (fulfilment.method === "pickup") {
-    return pickupPoints.find((p) => p.id === fulfilment.pickupId)?.feeKobo ?? 0;
-  }
-  const zone = zoneForState(fulfilment.state);
-  return roundUp(zone.baseKobo + Math.max(0, totalKg - 1) * zone.perKgKobo);
-}
-
 export function gatewayFeeKobo(amountKobo: number, provider: PaymentProvider) {
   const g = pricingSettings.gateway[provider];
   const flat = amountKobo < g.waiveFlatBelowKobo ? 0 : g.flatKobo;
@@ -66,10 +65,27 @@ export function gatewayFeeKobo(amountKobo: number, provider: PaymentProvider) {
 
 export type QuoteLine = {
   source: ProductSource;
+  storeId: string;
   unitPriceKobo: number;
+  wholesale: WholesaleTier[];
   unitShippingKobo: number;
   estWeightKg: number;
   quantity: number;
+  freeDelivery: boolean;
+};
+
+export type DeliveryChoice = { state: string; carrier: CarrierId; method: DeliveryMethod };
+
+export type StoreQuote = {
+  storeId: string;
+  storeName: string;
+  storeSlug: string;
+  itemsKobo: number;
+  weightKg: number;
+  deliveryKobo: number;
+  free: boolean;
+  reason: string | null;
+  days: [number, number] | null;
 };
 
 export type Quote = {
@@ -78,10 +94,12 @@ export type Quote = {
   localDeliveryKobo: number;
   serviceFeeKobo: number;
   discountKobo: number;
+  loyaltyKobo: number;
   vatKobo: number;
   totalKobo: number;
   totalWeightKg: number;
   hasImported: boolean;
+  stores: StoreQuote[];
 };
 
 export function discountKobo(discount: Discount | null, itemsKobo: number) {
@@ -90,14 +108,61 @@ export function discountKobo(discount: Discount | null, itemsKobo: number) {
   return Math.min(raw, itemsKobo);
 }
 
-export function quote(lines: QuoteLine[], fulfilment: Fulfilment | null, discount: Discount | null = null): Quote {
-  const itemsKobo = lines.reduce((s, l) => s + l.unitPriceKobo * l.quantity, 0);
+/** Line total after wholesale tiers. */
+export const lineTotalKobo = (l: Pick<QuoteLine, "unitPriceKobo" | "wholesale" | "quantity">) =>
+  wholesaleUnitKobo(l.unitPriceKobo, l.wholesale, l.quantity) * l.quantity;
+
+/**
+ * Price a cart. Items are grouped by store; each store ships separately with
+ * the buyer's chosen carrier, and the delivery total is the sum of shipments.
+ */
+export function quote(
+  lines: QuoteLine[],
+  delivery: DeliveryChoice | null,
+  discount: Discount | null = null,
+  loyaltyKobo = 0,
+): Quote {
+  const itemsKobo = lines.reduce((s, l) => s + lineTotalKobo(l), 0);
   const intlShippingKobo = lines.reduce((s, l) => s + l.unitShippingKobo * l.quantity, 0);
   const totalWeightKg = lines.reduce((s, l) => s + l.estWeightKg * l.quantity, 0);
-  const local = fulfilment && lines.length ? localDeliveryKobo(totalWeightKg, fulfilment) : 0;
+
+  const byStore = new Map<string, QuoteLine[]>();
+  for (const l of lines) byStore.set(l.storeId, [...(byStore.get(l.storeId) ?? []), l]);
+  const stores: StoreQuote[] = [...byStore.entries()].map(([storeId, ls]) => {
+    const store = storeById(storeId);
+    const subtotal = ls.reduce((s, l) => s + lineTotalKobo(l), 0);
+    const chargeable = ls.filter((l) => !l.freeDelivery);
+    const weight = chargeable.reduce((s, l) => s + l.estWeightKg * l.quantity, 0);
+    const q = delivery
+      ? quoteShipment({
+          carrier: delivery.carrier,
+          method: delivery.method,
+          originState: store.state,
+          destState: delivery.state,
+          chargeableKg: weight,
+          allFreeDelivery: chargeable.length === 0,
+          storeSubtotalKobo: subtotal,
+          freeOverKobo: store.freeDeliveryOverKobo,
+        })
+      : null;
+    return {
+      storeId,
+      storeName: store.name,
+      storeSlug: store.slug,
+      itemsKobo: subtotal,
+      weightKg: weight,
+      deliveryKobo: q?.priceKobo ?? 0,
+      free: q?.free ?? chargeable.length === 0,
+      reason: q?.reason ?? (chargeable.length === 0 ? "Delivery included in price" : null),
+      days: q?.days ?? null,
+    };
+  });
+
+  const local = stores.reduce((s, x) => s + x.deliveryKobo, 0);
   const serviceFeeKobo = lines.length ? pricingSettings.serviceFeeKobo : 0;
   const disc = discountKobo(discount, itemsKobo);
-  const taxable = itemsKobo - disc + serviceFeeKobo;
+  const loyalty = Math.min(loyaltyKobo, Math.max(0, itemsKobo - disc));
+  const taxable = itemsKobo - disc - loyalty + serviceFeeKobo;
   const vatKobo = pricingSettings.vat.enabled ? Math.round(taxable * pricingSettings.vat.rate) : 0;
   return {
     itemsKobo,
@@ -105,9 +170,11 @@ export function quote(lines: QuoteLine[], fulfilment: Fulfilment | null, discoun
     localDeliveryKobo: local,
     serviceFeeKobo,
     discountKobo: disc,
+    loyaltyKobo: loyalty,
     vatKobo,
-    totalKobo: itemsKobo + intlShippingKobo + local + serviceFeeKobo + vatKobo - disc,
+    totalKobo: itemsKobo + intlShippingKobo + local + serviceFeeKobo + vatKobo - disc - loyalty,
     totalWeightKg,
     hasImported: lines.some((l) => l.source === "imported"),
+    stores,
   };
 }

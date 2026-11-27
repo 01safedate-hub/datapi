@@ -16,7 +16,7 @@ export function PwaRegister() {
           const worker = reg.installing;
           worker?.addEventListener("statechange", () => {
             if (worker.state === "installed" && navigator.serviceWorker.controller) {
-              toast("A new version of Shupzy is available", {
+              toast("A new version of Alaba is available", {
                 duration: Infinity,
                 action: { label: "Refresh", onClick: () => worker.postMessage({ type: "SKIP_WAITING" }) },
               });

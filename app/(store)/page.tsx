@@ -1,4 +1,4 @@
-import { ArrowRight, BadgeCheck, Banknote, MapPinned, ShieldCheck } from "lucide-react";
+import { ArrowRight, BadgeCheck, Factory, MessageCircle, ShieldCheck, Truck } from "lucide-react";
 import Link from "next/link";
 import { JsonLd } from "@/components/json-ld";
 import { CategoryIcon } from "@/components/store/category-icon";
@@ -10,17 +10,18 @@ import { getBestSellers, getCategories, getDeals, getNewArrivals, queryProducts 
 import { site } from "@/lib/site";
 
 const trust = [
-  { icon: Banknote, title: "Naira prices", body: "No dollar surprises at checkout" },
-  { icon: BadgeCheck, title: "Shipping upfront", body: "Estimated before you pay" },
-  { icon: MapPinned, title: "Tracked end to end", body: "From China to your door" },
-  { icon: ShieldCheck, title: "Secure payment", body: "Paystack and Flutterwave" },
+  { icon: ShieldCheck, title: "Buyer Protection", body: "Sellers paid only after delivery" },
+  { icon: Factory, title: "Direct from makers", body: "No middlemen, better prices" },
+  { icon: Truck, title: "GIG or Jumia", body: "You choose the courier" },
+  { icon: MessageCircle, title: "Safe chat", body: "Scam-filtered seller messages" },
 ];
 
 export default function HomePage() {
   const categories = getCategories();
   const best = getBestSellers(8);
   const fresh = getNewArrivals(4);
-  const local = queryProducts({ source: "local", sort: "popular" }).slice(0, 4);
+  const local = queryProducts({ sellerType: "manufacturer", sort: "popular" }).slice(0, 4);
+  const imported = queryProducts({ source: "imported", sort: "popular" }).slice(0, 4);
   const deals = getDeals(4);
 
   return (
@@ -34,7 +35,7 @@ export default function HomePage() {
             url: site.url,
             logo: `${site.url}/icons/icon-512.png`,
             email: site.email,
-            address: { "@type": "PostalAddress", addressLocality: "Ikeja", addressRegion: "Lagos", addressCountry: "NG" },
+            address: { "@type": "PostalAddress", addressLocality: "Ojo", addressRegion: "Lagos", addressCountry: "NG" },
           },
           {
             "@context": "https://schema.org",
@@ -57,25 +58,25 @@ export default function HomePage() {
           <div className="relative max-w-xl">
             <p className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-sm">
               <span className="size-2 rounded-full bg-orange-500" aria-hidden />
-              Imported and local, one cart
+              Nigeria&apos;s marketplace, inspired by Alaba market
             </p>
-            <h1 className="text-4xl leading-[1.1] font-semibold sm:text-5xl">Shop China and Nigeria, pay in naira.</h1>
+            <h1 className="text-4xl leading-[1.1] font-semibold sm:text-5xl">Buy direct from Nigerian makers and sellers.</h1>
             <p className="mt-4 text-lg text-white/80">
-              Thousands of products with the full price shown upfront. We handle the supplier, shipping and customs. You track it to your door.
+              Manufacturers, importers and trusted vendors in one place. Wholesale or single items, delivered by GIG or Jumia, and you only release payment when it arrives.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <ButtonLink href="/shop" variant="accent" size="lg">
                 Start shopping <ArrowRight className="size-4.5" aria-hidden />
               </ButtonLink>
-              <ButtonLink href="/how-it-works" size="lg" className="border border-white/25 bg-transparent hover:bg-white/10">
-                How it works
+              <ButtonLink href="/manufacturers" size="lg" className="border border-white/25 bg-transparent hover:bg-white/10">
+                Meet the makers
               </ButtonLink>
             </div>
           </div>
         </div>
       </section>
 
-      <section aria-label="Why Shupzy" className="container-page mt-6">
+      <section aria-label="Why Alaba" className="container-page mt-6">
         <ul className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {trust.map(({ icon: Icon, title, body }) => (
             <li key={title} className="flex items-center gap-3 rounded-card border border-gray-200 p-4">
@@ -112,7 +113,7 @@ export default function HomePage() {
 
       <section className="mt-16 bg-gray-50 py-14">
         <div className="container-page">
-          <SectionHeader title="Need it this week?" description="Local stock in Lagos, delivered in 1–4 days." href="/shop?source=local" linkLabel="All fast delivery" />
+          <SectionHeader title="Made in Nigeria" description="Straight from manufacturers. Bulk prices on many items." href="/shop?seller=manufacturer" linkLabel="All manufacturers" />
           <ProductGrid products={local} />
         </div>
       </section>
@@ -125,12 +126,27 @@ export default function HomePage() {
       )}
 
       <section className="container-page mt-14">
+        <SectionHeader title="Imported by Alaba" description="Sourced from China by our team, with delivery times shown upfront." href="/shop?source=imported" />
+        <ProductGrid products={imported} />
+      </section>
+
+      <section className="container-page mt-14">
+        <div className="grid gap-4 rounded-2xl bg-orange-50 p-6 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-8">
+          <div>
+            <h2 className="text-xl font-semibold">Make or sell products? Open your Alaba store.</h2>
+            <p className="mt-1 text-gray-700">Free to start. Reach buyers in all 36 states and get paid after every delivery.</p>
+          </div>
+          <ButtonLink href="/sell" variant="accent" size="lg"><BadgeCheck className="size-4.5" aria-hidden />Start selling</ButtonLink>
+        </div>
+      </section>
+
+      <section className="container-page mt-14">
         <SectionHeader title="New arrivals" href="/shop?sort=newest" />
         <ProductGrid products={fresh} />
       </section>
 
       <section className="container-page mt-16">
-        <SectionHeader title="How Shupzy works" href="/how-it-works" linkLabel="Learn more" />
+        <SectionHeader title="How Alaba works" href="/how-it-works" linkLabel="Learn more" />
         <HowItWorksSteps />
       </section>
     </>

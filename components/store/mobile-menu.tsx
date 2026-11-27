@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, HelpCircle, Menu, Package, Truck, User } from "lucide-react";
+import { BadgeCheck, ChevronRight, Factory, HelpCircle, Menu, MessageCircle, Package, Store, Truck, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -19,6 +19,10 @@ export function MobileMenu({ categories }: { categories: Category[] }) {
 
   const links = [
     { href: "/account/orders", label: "My orders", icon: Package },
+    { href: "/messages", label: "Messages", icon: MessageCircle },
+    { href: "/manufacturers", label: "Manufacturers", icon: Factory },
+    { href: "/brands", label: "Brands", icon: BadgeCheck },
+    { href: "/sell", label: "Sell on Alaba", icon: Store },
     { href: "/track", label: "Track an order", icon: Truck },
     { href: "/account", label: "Account", icon: User },
     { href: "/faq", label: "Help & FAQ", icon: HelpCircle },

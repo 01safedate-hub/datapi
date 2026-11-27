@@ -6,12 +6,12 @@ import { ContactForm } from "./contact-form";
 
 export const metadata: Metadata = {
   title: "Contact us",
-  description: "Reach Shupzy on WhatsApp, email or phone. We reply fast.",
+  description: "Reach Alaba on WhatsApp, email or phone. We reply fast.",
   alternates: { canonical: "/contact" },
 };
 
 const channels = [
-  { icon: MessageCircle, label: "WhatsApp", value: "Fastest, under 10 minutes", href: whatsappLink("Hi Shupzy") },
+  { icon: MessageCircle, label: "WhatsApp", value: "Fastest, under 10 minutes", href: whatsappLink("Hi Alaba") },
   { icon: Mail, label: "Email", value: site.email, href: `mailto:${site.email}` },
   { icon: Phone, label: "Phone", value: site.phone, href: `tel:${site.phone.replace(/\s/g, "")}` },
   { icon: MapPin, label: "Office", value: site.address },

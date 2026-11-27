@@ -25,7 +25,7 @@ export function RevenueChart({ data }: { data: { date: string; revenueKobo: numb
         const last = i === data.length - 1;
         return (
           <g key={d.date}>
-            <rect x={x} y={H - h} width={bw} height={h} rx="3" fill={last ? "#ff8a00" : "#0b1b3f"} opacity={last ? 1 : 0.85}>
+            <rect x={x} y={H - h} width={bw} height={h} rx="3" fill={last ? "#ff7a00" : "#0a1a52"} opacity={last ? 1 : 0.85}>
               <title>{`${d.date}: ${formatNaira(d.revenueKobo)} · ${d.orders} orders`}</title>
             </rect>
             {i % 7 === 0 && (

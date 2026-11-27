@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: "Order confirmed", robots: { index: f
 
 export default async function SuccessPage({ searchParams }: { searchParams: SearchParams }) {
   const sp = await searchParams;
-  const order = typeof sp.order === "string" && /^SHZ-\d{5}$/.test(sp.order) ? sp.order : null;
+  const order = typeof sp.order === "string" && /^ALB-\d{5}$/.test(sp.order) ? sp.order : null;
   const total = Number(sp.total);
   const email = typeof sp.email === "string" ? sp.email : null;
 

@@ -28,11 +28,12 @@ export default function manifest(): MetadataRoute.Manifest {
       { name: "Search", url: "/search", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
       { name: "Track an order", url: "/track", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
       { name: "My orders", url: "/account/orders", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
+      { name: "Messages", url: "/messages", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
       { name: "Cart", url: "/cart", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
     ],
     screenshots: [
-      { src: "/screenshots/home-mobile.png", sizes: "390x844", type: "image/png", form_factor: "narrow", label: "Shupzy home" },
-      { src: "/screenshots/home-desktop.png", sizes: "1440x900", type: "image/png", form_factor: "wide", label: "Shupzy home" },
+      { src: "/screenshots/home-mobile.png", sizes: "390x844", type: "image/png", form_factor: "narrow", label: "Alaba home" },
+      { src: "/screenshots/home-desktop.png", sizes: "1440x900", type: "image/png", form_factor: "wide", label: "Alaba home" },
     ],
   };
 }

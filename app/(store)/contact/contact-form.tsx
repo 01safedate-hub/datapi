@@ -42,7 +42,7 @@ export function ContactForm() {
         <Field label="Name" htmlFor="c-name" error={errors.name}><Input id="c-name" autoComplete="name" value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} aria-invalid={!!errors.name || undefined} /></Field>
         <Field label="Email" htmlFor="c-email" error={errors.email}><Input id="c-email" type="email" autoComplete="email" value={v.email} onChange={(e) => setV({ ...v, email: e.target.value })} aria-invalid={!!errors.email || undefined} /></Field>
       </div>
-      <Field label="Order number" htmlFor="c-order" optional><Input id="c-order" placeholder="SHZ-…" value={v.order} onChange={(e) => setV({ ...v, order: e.target.value })} /></Field>
+      <Field label="Order number" htmlFor="c-order" optional><Input id="c-order" placeholder="ALB-…" value={v.order} onChange={(e) => setV({ ...v, order: e.target.value })} /></Field>
       <Field label="Message" htmlFor="c-message" error={errors.message}><Textarea id="c-message" value={v.message} onChange={(e) => setV({ ...v, message: e.target.value })} aria-invalid={!!errors.message || undefined} /></Field>
       <Button type="submit" className="w-fit" loading={pending}>Send message</Button>
     </form>

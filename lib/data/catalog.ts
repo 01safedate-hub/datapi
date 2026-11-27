@@ -1,4 +1,4 @@
-import type { Availability, Category, Product, ProductOption, ProductSource } from "../types";
+import type { Availability, Category, Product, ProductOption, ProductSource, Variant, WholesaleTier } from "../types";
 
 export const categories: Category[] = [
   { slug: "phones", name: "Phones & Accessories", icon: "smartphone", description: "Smartphones, chargers, power banks, cases and earbuds." },
@@ -35,6 +35,14 @@ type Raw = {
   description: string;
   highlights: string[];
   specs: Record<string, string>;
+  /** Store slug; imported products always belong to Alaba Verified. */
+  store?: string;
+  /** Price change for an option value, in the product's source currency: { "Capacity:2 TB": 250 }. */
+  variantPrice?: Record<string, number>;
+  wholesale?: WholesaleTier[];
+  freeDelivery?: boolean;
+  video?: string;
+  warranty?: string;
 };
 
 const raw: Raw[] = [
@@ -287,40 +295,122 @@ const raw: Raw[] = [
     highlights: ["Hall-effect sticks", "Works with PC, phone, Switch", "30 h battery"],
     specs: { Connection: "Bluetooth / 2.4 GHz / USB-C", Battery: "30 h" },
   },
+  {
+    slug: "aba-handmade-leather-loafers", name: "Handmade Leather Loafers", brand: "Aba Leatherworks", category: "fashion", source: "local", icon: "footprints",
+    price: 28_000, kg: 1.1, dims: [32, 20, 12], stock: 140, days: [2, 5], rating: 4.6, reviews: 143, sold: 870, created: "2026-11-16", tags: ["shoes", "loafers", "leather", "men", "aba made"],
+    options: [{ name: "Size (EU)", values: ["40", "41", "42", "43", "44", "45"] }, { name: "Colour", values: ["Black", "Brown", "Tan"] }],
+    wholesale: [{ minQty: 12, discount: 0.12 }, { minQty: 48, discount: 0.2 }],
+    description: "Full-grain cowhide loafers hand-stitched in Aba. Leather sole with rubber heel grip. Custom sizes and logos available on request.",
+    highlights: ["Full-grain cowhide", "Hand-stitched in Aba", "Wholesale from 12 pairs", "Custom orders via chat"],
+    specs: { Upper: "Full-grain cowhide", Sole: "Leather with rubber heel", Lining: "Goatskin", Made_in: "Aba, Abia State" },
+  },
 ];
+
+/** Marketplace details layered onto the base catalogue (store, variant prices, wholesale, video). */
+const extras: Record<string, Partial<Raw>> = {
+  "volt-x12-5g-smartphone": { warranty: "12 months", video: "https://www.tiktok.com/@alaba.ng/video/7441234567890123456", variantPrice: { "Colour:Silver": 30 } },
+  "kora-20000mah-power-bank": { store: "kora-power-industries", wholesale: [{ minQty: 10, discount: 0.08 }, { minQty: 50, discount: 0.15 }], video: "https://www.instagram.com/reel/C9x1AlabaDemo/", warranty: "6 months" },
+  "glide-silent-mouse": { store: "lekki-gadget-hub", freeDelivery: true },
+  "echo-bass-bluetooth-speaker": { store: "lekki-gadget-hub", variantPrice: { "Colour:Blue": 1500 }, warranty: "12 months" },
+  "edge-beard-trimmer": { store: "lekki-gadget-hub" },
+  "breeze-rechargeable-fan": { store: "arewa-home-appliances" },
+  "metro-laptop-backpack": { store: "aba-leatherworks", wholesale: [{ minQty: 12, discount: 0.1 }, { minQty: 60, discount: 0.18 }] },
+  "aura-perfume-oil-set": { store: "lekki-gadget-hub" },
+  "stash-1tb-portable-ssd": { variantPrice: { "Capacity:2 TB": 260 } },
+  "aero-14-ultrabook": { warranty: "12 months" },
+  "keyflow-mechanical-keyboard": { variantPrice: { "Switch:Brown (tactile)": 15 } },
+  "pixel-watch-fit-pro": { variantPrice: { "Strap:Steel mesh": 40 } },
+  "aba-handmade-leather-loafers": { store: "aba-leatherworks" },
+};
 
 const fen = (rmb: number) => Math.round(rmb * 100);
 const kobo = (naira: number) => Math.round(naira * 100);
 
-export const products: Product[] = raw.map((r, i) => ({
-  id: `prd_${String(i + 1).padStart(3, "0")}`,
-  slug: r.slug,
-  name: r.name,
-  brand: r.brand,
-  category: r.category,
-  source: r.source,
-  origin: r.origin ?? "manual",
-  status: "active",
-  description: r.description,
-  highlights: r.highlights,
-  specs: r.specs,
-  images: [1, 2, 3].map((n) => `/products/${r.slug}-${n}.svg`),
-  supplierPriceFen: r.source === "imported" ? fen(r.price) : undefined,
-  priceKobo: r.source === "local" ? kobo(r.price) : undefined,
-  compareAtKobo: r.compareAt ? kobo(r.compareAt) : undefined,
-  estWeightKg: r.kg,
-  dimsCm: r.dims,
-  moq: r.moq ?? 1,
-  stock: r.stock ?? 999,
-  availability: r.availability ?? "in_stock",
-  deliveryDays: r.days ?? [10, 18],
-  options: r.options ?? [],
-  rating: r.rating,
-  reviewCount: r.reviews,
-  sold: r.sold,
-  createdAt: `${r.created}T10:00:00.000Z`,
-  tags: r.tags,
-}));
+const STORE_IDS: Record<string, string> = {
+  "alaba-verified": "str_alaba",
+  "kora-power-industries": "str_kora",
+  "aba-leatherworks": "str_aba",
+  "lekki-gadget-hub": "str_lekki",
+  "arewa-home-appliances": "str_kano",
+};
+
+/** Deterministic pseudo-random stock so demo data is stable between builds. */
+const seeded = (seed: string, max: number) => {
+  let h = 0;
+  for (const c of seed) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return h % max;
+};
+
+function cartesian(options: ProductOption[]): Record<string, string>[] {
+  return options.reduce<Record<string, string>[]>(
+    (acc, o) => acc.flatMap((combo) => o.values.map((v) => ({ ...combo, [o.name]: v }))),
+    [{}],
+  );
+}
+
+function buildVariants(r: Raw, base: { fen?: number; kobo?: number; compareKobo?: number }, totalStock: number): Variant[] {
+  const combos = cartesian(r.options ?? []);
+  return combos.map((options, i) => {
+    const delta = Object.entries(options).reduce((sum, [k, v]) => sum + (r.variantPrice?.[`${k}:${v}`] ?? 0), 0);
+    const code = Object.values(options).map((v) => v.replace(/[^A-Za-z0-9]/g, "").slice(0, 3).toUpperCase()).join("-");
+    const stock = r.availability === "out_of_stock" ? 0 : r.source === "imported" ? 999 : Math.max(0, Math.round(totalStock / combos.length) + seeded(r.slug + i, 5) - 2);
+    return {
+      id: `${r.slug}#${i}`,
+      sku: `ALB-${r.slug.split("-").slice(0, 2).join("").slice(0, 8).toUpperCase()}${code ? `-${code}` : ""}`,
+      options,
+      supplierPriceFen: base.fen != null ? base.fen + fen(delta) : undefined,
+      priceKobo: base.kobo != null ? base.kobo + kobo(delta) : undefined,
+      compareAtKobo: base.compareKobo,
+      stock,
+    };
+  });
+}
+
+export const products: Product[] = raw.map((r0, i) => {
+  const r = { ...r0, ...extras[r0.slug] };
+  const storeSlug = r.source === "imported" ? "alaba-verified" : (r.store ?? "alaba-verified");
+  const stock = r.stock ?? 999;
+  return {
+    id: `prd_${String(i + 1).padStart(3, "0")}`,
+    slug: r.slug,
+    name: r.name,
+    brand: r.brand.toLowerCase().replace(/\s+/g, "-"),
+    storeId: STORE_IDS[storeSlug] ?? "str_alaba",
+    category: r.category,
+    source: r.source,
+    origin: r.origin ?? "manual",
+    status: "active",
+    description: r.description,
+    highlights: r.highlights,
+    specs: Object.fromEntries(Object.entries(r.specs).map(([k, v]) => [k.replace(/_/g, " "), v])),
+    images: [1, 2, 3].map((n) => `/products/${r.slug}-${n}.svg`),
+    supplierPriceFen: r.source === "imported" ? fen(r.price) : undefined,
+    priceKobo: r.source === "local" ? kobo(r.price) : undefined,
+    compareAtKobo: r.compareAt ? kobo(r.compareAt) : undefined,
+    estWeightKg: r.kg,
+    dimsCm: r.dims,
+    moq: r.moq ?? 1,
+    stock,
+    availability: r.availability ?? "in_stock",
+    deliveryDays: r.days ?? [10, 18],
+    options: r.options ?? [],
+    variants: buildVariants(
+      r,
+      r.source === "imported" ? { fen: fen(r.price) } : { kobo: kobo(r.price), compareKobo: r.compareAt ? kobo(r.compareAt) : undefined },
+      stock,
+    ),
+    wholesale: r.wholesale ?? [],
+    freeDelivery: r.freeDelivery ?? false,
+    videoUrl: r.video,
+    condition: "new",
+    warranty: r.warranty,
+    rating: r.rating,
+    reviewCount: r.reviews,
+    sold: r.sold,
+    createdAt: `${r.created}T10:00:00.000Z`,
+    tags: r.tags,
+  };
+});
 
 /** Used by scripts/generate-product-images.ts */
 export const productIcons = raw.map((r) => ({ slug: r.slug, icon: r.icon, category: r.category }));

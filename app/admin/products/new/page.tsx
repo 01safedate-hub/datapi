@@ -1,3 +1,4 @@
+import { brands, stores } from "@/lib/data/stores";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { PageHeader } from "@/components/admin/ui";
@@ -11,7 +12,7 @@ export default function NewProductPage() {
     <>
       <Link href="/admin/products" className="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-navy-900"><ChevronLeft className="size-4" aria-hidden /> Products</Link>
       <PageHeader title="Add product" />
-      <ProductForm categories={categories} />
+      <ProductForm categories={categories} brands={brands.map((b) => ({ slug: b.slug, name: b.name }))} stores={stores.map((s) => ({ id: s.id, name: s.name }))} />
     </>
   );
 }

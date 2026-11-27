@@ -1,9 +1,9 @@
-/* Shupzy service worker — offline fallback + fast repeat visits. */
-const VERSION = "shupzy-v1";
+/* Alaba service worker — offline fallback + fast repeat visits. */
+const VERSION = "alaba-v2";
 const STATIC = `${VERSION}-static`;
 const PAGES = `${VERSION}-pages`;
 const OFFLINE_URL = "/offline";
-const PRECACHE = [OFFLINE_URL, "/logo-mark.png", "/icons/icon-192.png", "/manifest.webmanifest"];
+const PRECACHE = [OFFLINE_URL, "/logo.png", "/icons/icon-192.png", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(STATIC).then((c) => c.addAll(PRECACHE)));

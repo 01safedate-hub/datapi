@@ -12,6 +12,7 @@ import { defaultAgent, pricingSettings } from "@/lib/data/settings";
 import { estShippingKobo, markupFor, unitPriceKobo } from "@/lib/pricing";
 import type { Category, Product } from "@/lib/types";
 import { formatNaira } from "@/lib/utils";
+import { parseVideoLink, videoLinkHelp } from "@/lib/video";
 
 type Draft = {
   name: string; brand: string; category: string; source: "imported" | "local"; status: "active" | "draft";
@@ -19,6 +20,7 @@ type Draft = {
   supplierRmb: string; priceNgn: string; compareNgn: string;
   kg: string; l: string; w: string; h: string; moq: string; stock: string; dmin: string; dmax: string;
   images: string[];
+  store: string; video: string; freeDelivery: string;
 };
 
 function fromProduct(p?: Product): Draft {
@@ -29,10 +31,13 @@ function fromProduct(p?: Product): Draft {
     kg: p ? String(p.estWeightKg) : "", l: p ? String(p.dimsCm[0]) : "", w: p ? String(p.dimsCm[1]) : "", h: p ? String(p.dimsCm[2]) : "",
     moq: p ? String(p.moq) : "1", stock: p?.source === "local" ? String(p.stock) : "", dmin: p ? String(p.deliveryDays[0]) : "10", dmax: p ? String(p.deliveryDays[1]) : "18",
     images: p?.images ?? [],
+    store: p?.storeId ?? "str_alaba", video: p?.videoUrl ?? "", freeDelivery: p?.freeDelivery ? "yes" : "",
   };
 }
 
-export function ProductForm({ product, categories }: { product?: Product; categories: Category[] }) {
+type Opt = { id: string; name: string };
+
+export function ProductForm({ product, categories, brands, stores }: { product?: Product; categories: Category[]; brands: { slug: string; name: string }[]; stores: Opt[] }) {
   const router = useRouter();
   const [d, setD] = useState<Draft>(() => fromProduct(product));
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -53,6 +58,8 @@ export function ProductForm({ product, categories }: { product?: Product; catego
     const e: Record<string, string> = {};
     if (d.name.trim().length < 4) e.name = "Add a clear product name";
     if (!d.category) e.category = "Choose a category";
+    if (!d.brand) e.brand = "Choose a brand (required)";
+    if (d.video.trim() && !parseVideoLink(d.video)) e.video = videoLinkHelp;
     if (imported && !(num(d.supplierRmb) > 0)) e.supplierRmb = "Enter the supplier price in ¥";
     if (!imported && !(num(d.priceNgn) > 0)) e.priceNgn = "Enter the selling price in ₦";
     if (!(num(d.kg) > 0)) e.kg = "Enter an estimated weight";
@@ -80,7 +87,20 @@ export function ProductForm({ product, categories }: { product?: Product; catego
           <h2 className="font-semibold">Basics</h2>
           <Field label="Product name" htmlFor="name" error={errors.name}><Input id="name" value={d.name} onChange={(e) => set("name", e.target.value)} {...inv("name")} /></Field>
           <div className="grid gap-4 sm:grid-cols-3">
-            <Field label="Brand" htmlFor="brand" optional><Input id="brand" value={d.brand} onChange={(e) => set("brand", e.target.value)} /></Field>
+            <Field label="Brand" htmlFor="brand" error={errors.brand} hint={<a href="/admin/brands" className="text-brand-600 hover:underline">Add a brand</a>}>
+              <Select id="brand" value={d.brand} onChange={(e) => set("brand", e.target.value)} {...inv("brand")}>
+                <option value="">Choose brand</option>
+                {brands.map((b) => <option key={b.slug} value={b.slug}>{b.name}</option>)}
+              </Select>
+            </Field>
+            <Field label="Sold by" htmlFor="store" hint={imported ? "Imported products are always sold by Alaba Verified" : undefined}>
+              <Select id="store" value={imported ? "str_alaba" : d.store} disabled={imported} onChange={(e) => set("store", e.target.value)}>
+                {stores.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </Select>
+            </Field>
+            <Field label="Product video" htmlFor="video" optional error={errors.video} hint="TikTok or Instagram links only">
+              <Input id="video" type="url" value={d.video} onChange={(e) => set("video", e.target.value)} placeholder="https://www.tiktok.com/@alaba.ng/video/…" {...inv("video")} />
+            </Field>
             <Field label="Category" htmlFor="category" error={errors.category}>
               <Select id="category" value={d.category} onChange={(e) => set("category", e.target.value)} {...inv("category")}>
                 <option value="">Choose…</option>

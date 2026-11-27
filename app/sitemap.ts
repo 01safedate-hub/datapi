@@ -1,10 +1,10 @@
 import type { MetadataRoute } from "next";
-import { getCategories, queryProducts } from "@/lib/catalog";
+import { getBrands, getCategories, getStores, queryProducts } from "@/lib/catalog";
 import { site } from "@/lib/site";
 
 const staticPages = [
   "", "/shop", "/how-it-works", "/shipping", "/faq", "/about", "/contact", "/track",
-  "/privacy", "/terms", "/refund-policy",
+  "/privacy", "/terms", "/refund-policy", "/buyer-protection", "/sell", "/manufacturers", "/brands", "/brands/register",
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -22,6 +22,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "daily" as const,
       priority: 0.8,
     })),
+    ...getStores().map((s) => ({ url: `${site.url}/store/${s.slug}`, lastModified: now, changeFrequency: "weekly" as const, priority: 0.6 })),
+    ...getBrands().map((b) => ({ url: `${site.url}/brands/${b.slug}`, lastModified: now, changeFrequency: "weekly" as const, priority: 0.5 })),
     ...queryProducts().map((p) => ({
       url: `${site.url}/p/${p.slug}`,
       lastModified: new Date(p.createdAt),

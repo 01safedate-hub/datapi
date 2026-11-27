@@ -4,17 +4,19 @@
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
-  /* Brand */
-  --color-navy-950: #071230;
-  --color-navy-900: #0b1b3f;
-  --color-navy-800: #12285c;
-  --color-navy-700: #1a3a85;
-  --color-brand-600: #1d3fd1;
-  --color-brand-500: #2f5bea;
-  --color-brand-50: #eef2ff;
-  --color-orange-500: #ff8a00;
-  --color-orange-600: #e67a00;
-  --color-orange-50: #fff4e5;
+  /* Brand: taken from the Alaba logo (royal blue + orange flame) */
+  --color-navy-950: #050d33;
+  --color-navy-900: #0a1a52;
+  --color-navy-800: #102673;
+  --color-navy-700: #1a3a9e;
+  --color-navy-50: #f1f4fb;
+  --color-brand-600: #0047ff;
+  --color-brand-500: #2563ff;
+  --color-brand-50: #eef3ff;
+  --color-orange-500: #ff7a00;
+  --color-orange-600: #e85d00;
+  --color-orange-50: #fff3e6;
+  --color-sun-400: #ffc400;
 
   --radius-card: 0.75rem;
   --shadow-drawer: 0 10px 40px -10px rgb(7 18 48 / 0.35);

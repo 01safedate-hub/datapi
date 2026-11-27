@@ -21,7 +21,6 @@ export const pricingSettings = {
   vat: { enabled: false, rate: 0.075 },
   gateway: {
     paystack: { pct: 0.015, flatKobo: 10_000, capKobo: 200_000, waiveFlatBelowKobo: 250_000 },
-    flutterwave: { pct: 0.014, flatKobo: 0, capKobo: 200_000, waiveFlatBelowKobo: 0 },
   },
 };
 
@@ -87,10 +86,12 @@ export const deliveryZones: DeliveryZone[] = [
   { id: "rest", name: "Other states", states: [], baseKobo: 400_000, perKgKobo: 300_000, days: [3, 6] },
 ];
 
+/** Jumia pickup stations offered at checkout (subset; admin-managed). */
 export const pickupPoints = [
-  { id: "ikeja", name: "Ikeja Hub", address: "12 Allen Avenue, Ikeja, Lagos", feeKobo: 0 },
-  { id: "lekki", name: "Lekki Hub", address: "Admiralty Way, Lekki Phase 1, Lagos", feeKobo: 0 },
-  { id: "wuse", name: "Wuse Hub", address: "Aminu Kano Crescent, Wuse 2, Abuja", feeKobo: 50_000 },
+  { id: "ikeja", name: "Jumia Pickup Station, Ikeja", address: "Allen Avenue, Ikeja, Lagos", state: "Lagos", feeKobo: 0 },
+  { id: "lekki", name: "Jumia Pickup Station, Lekki", address: "Admiralty Way, Lekki Phase 1, Lagos", state: "Lagos", feeKobo: 0 },
+  { id: "wuse", name: "Jumia Pickup Station, Wuse 2", address: "Aminu Kano Crescent, Wuse 2, Abuja", state: "FCT", feeKobo: 0 },
+  { id: "ph", name: "Jumia Pickup Station, GRA", address: "Aba Road, GRA, Port Harcourt", state: "Rivers", feeKobo: 0 },
 ];
 
 export const nigerianStates = [
@@ -103,3 +104,96 @@ export const nigerianStates = [
 export function zoneForState(state: string): DeliveryZone {
   return deliveryZones.find((z) => z.states.includes(state)) ?? deliveryZones[deliveryZones.length - 1]!;
 }
+
+/* ---------------- Marketplace settings ---------------- */
+
+/** Nigeria's six geopolitical zones, used for delivery pricing. */
+export const regions: Record<string, string[]> = {
+  "south-west": ["Lagos", "Ogun", "Oyo", "Osun", "Ondo", "Ekiti"],
+  "south-east": ["Abia", "Anambra", "Ebonyi", "Enugu", "Imo"],
+  "south-south": ["Akwa Ibom", "Bayelsa", "Cross River", "Delta", "Edo", "Rivers"],
+  "north-central": ["Benue", "FCT", "Kogi", "Kwara", "Nasarawa", "Niger", "Plateau"],
+  "north-east": ["Adamawa", "Bauchi", "Borno", "Gombe", "Taraba", "Yobe"],
+  "north-west": ["Jigawa", "Kaduna", "Kano", "Katsina", "Kebbi", "Sokoto", "Zamfara"],
+};
+
+export const regionOf = (state: string) => Object.keys(regions).find((r) => regions[r]!.includes(state)) ?? "north-central";
+
+export type RateBand = { baseKobo: number; perKgKobo: number; days: [number, number] };
+
+export type Carrier = {
+  id: "gig" | "jumia";
+  name: string;
+  short: string;
+  logo: string;
+  methods: ("door" | "pickup")[];
+  /** Pickup-station discount off the door price (Jumia only). */
+  pickupDiscount: number;
+  rates: { sameState: RateBand; sameRegion: RateBand; national: RateBand };
+  active: boolean;
+};
+
+/**
+ * Admin-configured courier rates (no live API yet). Logos: put official
+ * files at /public/carriers/gig.svg and /public/carriers/jumia.svg.
+ */
+export const carriers: Carrier[] = [
+  {
+    id: "gig",
+    name: "GIG Logistics",
+    short: "GIG",
+    logo: "/carriers/gig.svg",
+    methods: ["door"],
+    pickupDiscount: 0,
+    rates: {
+      sameState: { baseKobo: 180_000, perKgKobo: 30_000, days: [1, 2] },
+      sameRegion: { baseKobo: 300_000, perKgKobo: 45_000, days: [2, 4] },
+      national: { baseKobo: 450_000, perKgKobo: 60_000, days: [3, 6] },
+    },
+    active: true,
+  },
+  {
+    id: "jumia",
+    name: "Jumia Delivery",
+    short: "Jumia",
+    logo: "/carriers/jumia.svg",
+    methods: ["door", "pickup"],
+    pickupDiscount: 0.3,
+    rates: {
+      sameState: { baseKobo: 160_000, perKgKobo: 30_000, days: [1, 3] },
+      sameRegion: { baseKobo: 280_000, perKgKobo: 40_000, days: [2, 5] },
+      national: { baseKobo: 420_000, perKgKobo: 55_000, days: [3, 7] },
+    },
+    active: true,
+  },
+];
+
+/** Platform switches and commercial settings, edited from the admin. */
+export const platformDefaults = {
+  /** Sponsored products are built but off until traffic justifies them. */
+  sponsoredAdsEnabled: false,
+  commission: { default: 0.08, byCategory: { phones: 0.06, computers: 0.06, fashion: 0.12, beauty: 0.12 } as Record<string, number> },
+  buyerProtection: { autoConfirmHours: 72, disputeWindowHours: 72 },
+  loyalty: { pointsPerNaira: 0.01, nairaPerPoint: 1, minRedeemPoints: 500, maxRedeemShare: 0.1, expiryMonths: 12 },
+  ads: {
+    cpc: { minBidKobo: 2_000 },
+    cpm: { minBidKobo: 50_000 },
+    cpa: { minRate: 0.05, attributionDays: 7 },
+    clickDedupeHours: 24,
+  },
+};
+
+export type SubscriptionPlan = {
+  id: "free" | "pro" | "business";
+  name: string;
+  priceKobo: number;
+  listingCap: number | null;
+  searchBoost: number;
+  features: string[];
+};
+
+export const subscriptionPlans: SubscriptionPlan[] = [
+  { id: "free", name: "Free", priceKobo: 0, listingCap: 50, searchBoost: 0, features: ["Up to 50 listings", "Store page", "Chat with buyers", "Alaba Buyer Protection"] },
+  { id: "pro", name: "Pro", priceKobo: 500_000, listingCap: 500, searchBoost: 0.1, features: ["Up to 500 listings", "Search visibility boost", "Featured in category pages", "Sales analytics"] },
+  { id: "business", name: "Business", priceKobo: 2_500_000, listingCap: null, searchBoost: 0.2, features: ["Unlimited listings", "Higher visibility boost", "Homepage store spotlight", "Priority support"] },
+];

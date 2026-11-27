@@ -61,7 +61,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
         setSent(true);
         return;
       }
-      toast.success(mode === "register" ? "Account created. Welcome to Shupzy!" : mode === "reset" ? "Password updated" : "Logged in");
+      toast.success(mode === "register" ? "Account created. Welcome to Alaba!" : mode === "reset" ? "Password updated" : "Logged in");
       router.push(mode === "reset" ? "/login" : next);
     });
   }
@@ -138,7 +138,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
 
       <p className="mt-6 text-center text-sm text-gray-600">
         {mode === "login" ? (
-          <>New to Shupzy? <Link href={`/register?next=${encodeURIComponent(next)}`} className="font-medium text-brand-600 hover:underline">Create an account</Link></>
+          <>New to Alaba? <Link href={`/register?next=${encodeURIComponent(next)}`} className="font-medium text-brand-600 hover:underline">Create an account</Link></>
         ) : mode === "register" ? (
           <>Already have an account? <Link href={`/login?next=${encodeURIComponent(next)}`} className="font-medium text-brand-600 hover:underline">Log in</Link></>
         ) : (

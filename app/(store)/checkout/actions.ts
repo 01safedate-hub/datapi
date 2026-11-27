@@ -3,8 +3,10 @@
 import { z } from "zod";
 import { products } from "@/lib/data/catalog";
 import { discounts } from "@/lib/data/ops";
-import { nigerianStates, pickupPoints } from "@/lib/data/settings";
-import { discountKobo, estShippingKobo, quote, unitPriceKobo, type Fulfilment } from "@/lib/pricing";
+import { carriers, nigerianStates, pickupPoints } from "@/lib/data/settings";
+import { discountKobo, estShippingKobo, lineTotalKobo, quote, variantPriceKobo, type DeliveryChoice } from "@/lib/pricing";
+import { balance, ledger, maxRedeemKobo } from "@/lib/loyalty";
+import { getMyOrders } from "@/lib/orders";
 import type { Discount } from "@/lib/types";
 
 export type CouponResult = { ok: true; discount: Discount; message: string } | { ok: false; message: string };
@@ -34,25 +36,30 @@ const orderSchema = z
     email: z.email("Enter a valid email address so we can send your receipt"),
     phone,
     name: z.string().trim().min(2, "Enter your full name"),
-    method: z.enum(["delivery", "pickup"]),
+    method: z.enum(["door", "pickup"]),
+    carrier: z.enum(["gig", "jumia"]),
     address: z.string().trim().optional(),
     city: z.string().trim().optional(),
     state: z.string().optional(),
     pickupId: z.string().optional(),
-    provider: z.enum(["paystack", "flutterwave"]),
+    provider: z.literal("paystack"),
     whatsapp: z.boolean(),
+    usePoints: z.boolean().optional(),
     coupon: z.string().nullable(),
     lines: z
-      .array(z.object({ productId: z.string(), quantity: z.number().int().min(1).max(99), options: z.record(z.string(), z.string()) }))
+      .array(z.object({ productId: z.string(), variantId: z.string(), quantity: z.number().int().min(1).max(999) }))
       .min(1, "Your cart is empty"),
   })
   .superRefine((v, ctx) => {
-    if (v.method === "delivery") {
+    const c = carriers.find((x) => x.id === v.carrier && x.active);
+    if (!c) ctx.addIssue({ code: "custom", path: ["carrier"], message: "Choose a courier" });
+    else if (!c.methods.includes(v.method)) ctx.addIssue({ code: "custom", path: ["method"], message: `${c.name} doesn't offer pickup stations` });
+    if (v.method === "door") {
       if (!v.address || v.address.length < 5) ctx.addIssue({ code: "custom", path: ["address"], message: "Enter your street address" });
       if (!v.city) ctx.addIssue({ code: "custom", path: ["city"], message: "Enter your city or area" });
       if (!v.state || !nigerianStates.includes(v.state)) ctx.addIssue({ code: "custom", path: ["state"], message: "Choose your state" });
     } else if (!pickupPoints.some((p) => p.id === v.pickupId)) {
-      ctx.addIssue({ code: "custom", path: ["pickupId"], message: "Choose a pickup hub" });
+      ctx.addIssue({ code: "custom", path: ["pickupId"], message: "Choose a pickup station" });
     }
   });
 
@@ -64,7 +71,7 @@ export type PlaceOrderResult =
 /**
  * Validates the order and recomputes every price on the server — the browser's
  * numbers are never trusted. In production this inserts the order, then
- * initialises Paystack/Flutterwave and returns the gateway's checkout URL.
+ * initialises Paystack and returns the gateway's checkout URL.
  */
 export async function placeOrder(input: OrderInput): Promise<PlaceOrderResult> {
   const parsed = orderSchema.safeParse(input);
@@ -84,20 +91,39 @@ export async function placeOrder(input: OrderInput): Promise<PlaceOrderResult> {
     if (!p) return { ok: false, message: "An item in your cart is no longer available. Please review your cart." };
     if (p.availability === "out_of_stock") return { ok: false, message: `${p.name} just sold out. Remove it to continue.` };
     if (l.quantity < p.moq) return { ok: false, message: `${p.name} has a minimum order of ${p.moq}.` };
-    lines.push({ source: p.source, unitPriceKobo: unitPriceKobo(p), unitShippingKobo: estShippingKobo(p), estWeightKg: p.estWeightKg, quantity: l.quantity });
+    const variant = p.variants.find((x) => x.id === l.variantId);
+    if (!variant) return { ok: false, message: `The option you chose for ${p.name} is no longer available. Please re-add it.` };
+    if (p.source === "local" && variant.stock < l.quantity) {
+      return { ok: false, message: variant.stock ? `Only ${variant.stock} of ${p.name} left. Reduce the quantity to continue.` : `${p.name} (${Object.values(variant.options).join(", ")}) just sold out.` };
+    }
+    lines.push({
+      source: p.source,
+      storeId: p.storeId,
+      unitPriceKobo: variantPriceKobo(p, variant),
+      wholesale: p.wholesale,
+      unitShippingKobo: estShippingKobo(p),
+      estWeightKg: p.estWeightKg,
+      quantity: l.quantity,
+      freeDelivery: p.freeDelivery,
+    });
   }
 
-  const fulfilment: Fulfilment = v.method === "pickup" ? { method: "pickup", pickupId: v.pickupId! } : { method: "delivery", state: v.state! };
+  const state = v.method === "pickup" ? pickupPoints.find((x) => x.id === v.pickupId)!.state : v.state!;
+  const delivery: DeliveryChoice = { state, carrier: v.carrier, method: v.method };
   let discount: Discount | null = null;
   if (v.coupon) {
-    const itemsKobo = lines.reduce((s, l) => s + l.unitPriceKobo * l.quantity, 0);
+    const itemsKobo = lines.reduce((s, l) => s + lineTotalKobo(l), 0);
     const res = await applyCoupon(v.coupon, itemsKobo);
     if (res.ok) discount = res.discount;
   }
-  const q = quote(lines, fulfilment, discount);
+  // Production: reserve stock per variant (15-minute hold) and create one
+  // store_order per seller from q.stores, each with payout status "held".
+  // Points balance comes from the signed-in buyer's ledger, never from the client.
+  const pts = v.usePoints ? maxRedeemKobo(balance(ledger(getMyOrders())).available, lines.reduce((s, l) => s + lineTotalKobo(l), 0)) : 0;
+  const q = quote(lines, delivery, discount, pts);
 
   // Demo: simulate the gateway round-trip.
   await new Promise((r) => setTimeout(r, 900));
-  const orderNumber = `SHZ-${10507 + Math.floor(Math.random() * 400)}`;
+  const orderNumber = `ALB-${10507 + Math.floor(Math.random() * 400)}`;
   return { ok: true, orderNumber, totalKobo: q.totalKobo };
 }

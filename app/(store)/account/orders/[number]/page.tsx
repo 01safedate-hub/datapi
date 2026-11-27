@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { OrderTimeline } from "@/components/order-timeline";
+import { ShipmentTracker } from "@/components/store/shipment-tracker";
 import { stageTone } from "@/components/store/order-row";
 import { ButtonLink } from "@/components/ui/button";
 import { Badge, Card } from "@/components/ui/misc";
@@ -41,7 +41,7 @@ export default async function OrderDetailPage({ params }: { params: Params }) {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-2xl font-semibold">Order {order.number}</h2>
-          <p className="text-sm text-gray-600">Placed {formatDate(order.createdAt)} · Paid with {order.provider === "paystack" ? "Paystack" : "Flutterwave"}</p>
+          <p className="text-sm text-gray-600">Placed {formatDate(order.createdAt)} · Paid with Paystack</p>
         </div>
         <Badge tone={stageTone(order.stage)} className="text-sm">{stageMeta[order.stage].customer}</Badge>
       </div>
@@ -54,14 +54,14 @@ export default async function OrderDetailPage({ params }: { params: Params }) {
             <h3 className="mb-4 font-semibold">Items</h3>
             <ul className="divide-y divide-gray-200">
               {order.items.map((i) => (
-                <li key={i.productId} className="flex gap-4 py-3 first:pt-0 last:pb-0">
+                <li key={i.variantId} className="flex gap-4 py-3 first:pt-0 last:pb-0">
                   <span className="relative size-16 shrink-0 overflow-hidden rounded-lg bg-gray-100">
                     <Image src={i.image} alt="" fill sizes="64px" className="object-cover" />
                   </span>
                   <div className="min-w-0 flex-1 text-sm">
                     <p className="font-medium">{i.name}</p>
                     {Object.keys(i.options).length > 0 && <p className="text-gray-600">{Object.entries(i.options).map(([k, v]) => `${k}: ${v}`).join(" · ")}</p>}
-                    <p className="text-gray-600">Qty {i.quantity} · {i.source === "imported" ? "Imported" : "Local"}</p>
+                    <p className="text-gray-600">Qty {i.quantity} · {order.storeOrders.find((so) => so.storeId === i.storeId)?.storeName}{i.source === "imported" ? " · Imported" : ""}</p>
                   </div>
                   <p className="shrink-0 text-sm font-medium whitespace-nowrap tabular-nums">{formatNaira(i.unitPriceKobo * i.quantity)}</p>
                 </li>
@@ -71,8 +71,7 @@ export default async function OrderDetailPage({ params }: { params: Params }) {
 
           <Card className="p-5">
             <h3 className="mb-5 font-semibold">Tracking</h3>
-            {order.trackingNumbers.length > 0 && <p className="mb-5 text-sm">Air waybill: <span className="font-mono font-medium">{order.trackingNumbers.join(", ")}</span></p>}
-            <OrderTimeline order={order} />
+            <ShipmentTracker order={order} />
           </Card>
         </div>
 
@@ -124,7 +123,7 @@ export default async function OrderDetailPage({ params }: { params: Params }) {
             <h3 className="font-semibold">Need help?</h3>
             <div className="flex flex-wrap gap-2">
               <RequestHelp number={order.number} canCancel={canCancel} />
-              <ButtonLink href={whatsappLink(`Hi Shupzy, question about order ${order.number}`)} variant="ghost" size="sm" target="_blank" rel="noopener noreferrer">WhatsApp us</ButtonLink>
+              <ButtonLink href={whatsappLink(`Hi Alaba, question about order ${order.number}`)} variant="ghost" size="sm" target="_blank" rel="noopener noreferrer">WhatsApp us</ButtonLink>
             </div>
           </Card>
         </div>

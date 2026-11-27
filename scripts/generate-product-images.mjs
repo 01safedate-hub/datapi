@@ -21,9 +21,9 @@ for (const { slug, icon, category } of productIcons) {
   variants.forEach((v, i) => {
     const size = 24 * v.scale;
     const out = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">${v.bg}
-<ellipse cx="400" cy="${640 + v.dy}" rx="${size * 0.36}" ry="18" fill="#0b1b3f" opacity=".07"/>
-<g transform="translate(${400 - size / 2 + v.dx} ${400 - size / 2 + v.dy}) rotate(${v.rot} ${size / 2} ${size / 2}) scale(${v.scale})" fill="none" stroke="#0b1b3f" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round">${inner}</g>
-<circle cx="${400 + size * 0.3}" cy="${400 - size * 0.32 + v.dy}" r="10" fill="#ff8a00"/>
+<ellipse cx="400" cy="${640 + v.dy}" rx="${size * 0.36}" ry="18" fill="#0a1a52" opacity=".07"/>
+<g transform="translate(${400 - size / 2 + v.dx} ${400 - size / 2 + v.dy}) rotate(${v.rot} ${size / 2} ${size / 2}) scale(${v.scale})" fill="none" stroke="#0a1a52" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round">${inner}</g>
+<circle cx="${400 + size * 0.3}" cy="${400 - size * 0.32 + v.dy}" r="10" fill="#ff7a00"/>
 </svg>`;
     writeFileSync(`public/products/${slug}-${i + 1}.svg`, out);
   });

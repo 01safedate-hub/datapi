@@ -24,7 +24,7 @@ export default function StoreError({ error, reset }: { error: Error & { digest?:
         action={
           <>
             <Button onClick={reset}><RefreshCw className="size-4" aria-hidden /> Try again</Button>
-            <ButtonLink href={whatsappLink(`Hi Shupzy, I hit an error${error.digest ? ` (ref ${error.digest})` : ""}`)} variant="outline" target="_blank" rel="noopener noreferrer">
+            <ButtonLink href={whatsappLink(`Hi Alaba, I hit an error${error.digest ? ` (ref ${error.digest})` : ""}`)} variant="outline" target="_blank" rel="noopener noreferrer">
               Get help
             </ButtonLink>
           </>

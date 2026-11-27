@@ -41,7 +41,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
           action={
             <>
               <ButtonLink href="/shop">Browse all products</ButtonLink>
-              <ButtonLink href={whatsappLink(`Hi Shupzy, I'm looking for: ${q ?? ""}`)} variant="outline" target="_blank" rel="noopener noreferrer">
+              <ButtonLink href={whatsappLink(`Hi Alaba, I'm looking for: ${q ?? ""}`)} variant="outline" target="_blank" rel="noopener noreferrer">
                 Ask us on WhatsApp
               </ButtonLink>
             </>

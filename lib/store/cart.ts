@@ -2,11 +2,19 @@
 
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import type { Discount, ProductSource } from "@/lib/types";
+import type { Discount, ProductSource, WholesaleTier } from "@/lib/types";
 
 export type CartLine = {
   key: string;
   productId: string;
+  variantId: string;
+  sku: string;
+  storeId: string;
+  storeName: string;
+  storeSlug: string;
+  wholesale: WholesaleTier[];
+  freeDelivery: boolean;
+  stock: number;
   slug: string;
   name: string;
   image: string;
@@ -32,11 +40,7 @@ type CartState = {
   clear: () => void;
 };
 
-export const lineKey = (productId: string, options: Record<string, string>) =>
-  `${productId}:${Object.entries(options)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([k, v]) => `${k}=${v}`)
-    .join("|")}`;
+export const lineKey = (variantId: string) => variantId;
 
 export const useCart = create<CartState>()(
   persist(
@@ -45,7 +49,7 @@ export const useCart = create<CartState>()(
       coupon: null,
       lastAddedAt: 0,
       add: (line) => {
-        const key = lineKey(line.productId, line.options);
+        const key = lineKey(line.variantId);
         const existing = get().lines.find((l) => l.key === key);
         set({
           lastAddedAt: Date.now(),
@@ -56,7 +60,7 @@ export const useCart = create<CartState>()(
       },
       setQuantity: (key, quantity) =>
         set({
-          lines: get().lines.map((l) => (l.key === key ? { ...l, quantity: Math.max(l.moq, Math.min(99, quantity)) } : l)),
+          lines: get().lines.map((l) => (l.key === key ? { ...l, quantity: Math.max(l.moq, Math.min(l.stock > 0 ? Math.min(l.stock, 999) : 999, quantity)) } : l)),
         }),
       remove: (key) => {
         const line = get().lines.find((l) => l.key === key);
@@ -68,12 +72,26 @@ export const useCart = create<CartState>()(
       clear: () => set({ lines: [], coupon: null }),
     }),
     {
-      name: "shupzy-cart",
-      version: 2,
+      name: "alaba-cart",
+      version: 3,
+      migrate: () => ({ lines: [], coupon: null }),
       storage: createJSONStorage(() => localStorage),
       partialize: (s) => ({ lines: s.lines, coupon: s.coupon }),
     },
   ),
 );
+
+/** Cart lines as pricing-engine input. */
+export const toQuoteLines = (lines: CartLine[]) =>
+  lines.map((l) => ({
+    source: l.source,
+    storeId: l.storeId,
+    unitPriceKobo: l.unitPriceKobo,
+    wholesale: l.wholesale,
+    unitShippingKobo: l.unitShippingKobo,
+    estWeightKg: l.estWeightKg,
+    quantity: l.quantity,
+    freeDelivery: l.freeDelivery,
+  }));
 
 export const cartCount = (lines: CartLine[]) => lines.reduce((s, l) => s + l.quantity, 0);

@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800"><rect width="800" height="800" fill="#efece7"/><circle cx="400" cy="400" r="290" fill="#ffffff" opacity=".55"/>
-<ellipse cx="400" cy="640" rx="120.96" ry="18" fill="#0b1b3f" opacity=".07"/>
-<g transform="translate(232 232) rotate(-12 168 168) scale(14)" fill="none" stroke="#0b1b3f" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round">
+<ellipse cx="400" cy="640" rx="120.96" ry="18" fill="#0a1a52" opacity=".07"/>
+<g transform="translate(232 232) rotate(-12 168 168) scale(14)" fill="none" stroke="#0a1a52" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round">
   <path d="M16 10a4 4 0 0 1-8 0" />
   <path d="M3.103 6.034h17.794" />
   <path d="M3.4 5.467a2 2 0 0 0-.4 1.2V20a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6.667a2 2 0 0 0-.4-1.2l-2-2.667A2 2 0 0 0 17 2H7a2 2 0 0 0-1.6.8z" />
 </g>
-<circle cx="500.8" cy="292.48" r="10" fill="#ff8a00"/>
+<circle cx="500.8" cy="292.48" r="10" fill="#ff7a00"/>
 </svg>

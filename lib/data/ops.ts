@@ -1,4 +1,7 @@
-import { gatewayFeeKobo, localDeliveryKobo, unitPriceKobo, estShippingKobo, chargeableKg } from "../pricing";
+import { gatewayFeeKobo, estShippingKobo, variantPriceKobo, wholesaleUnitKobo } from "../pricing";
+import { quoteShipment } from "../delivery";
+import { platformDefaults } from "./settings";
+import { storeById } from "./stores";
 import { flowFor } from "../stages";
 import type {
   AuditEntry,
@@ -8,7 +11,9 @@ import type {
   OrderEvent,
   OrderStage,
   PaymentProvider,
+  PayoutStatus,
   Shipment,
+  StoreOrder,
   Staff,
   Supplier,
   Ticket,
@@ -42,27 +47,30 @@ type Spec = {
   stage: OrderStage;
   hoursAgo: number;
   provider: PaymentProvider;
+  carrier?: "gig" | "jumia";
   pickup?: string;
+  confirmed?: boolean;
   balanceKobo?: number;
   assignedTo?: string;
   notes?: string[];
 };
 
 const specs: Spec[] = [
-  { number: "SHZ-10482", customer: 0, items: [["volt-x12-5g-smartphone", 1, { Colour: "Ocean Blue" }], ["nexa-65w-gan-charger", 1]], stage: "dispatched", hoursAgo: 260, provider: "paystack", assignedTo: "Kemi (Orders)" },
-  { number: "SHZ-10479", customer: 0, items: [["kora-20000mah-power-bank", 2, { Colour: "Black" }]], stage: "delivered", hoursAgo: 410, provider: "flutterwave" },
-  { number: "SHZ-10491", customer: 0, items: [["vista-27-4k-monitor", 1]], stage: "awaiting_balance", hoursAgo: 190, provider: "paystack", balanceKobo: 1_875_000, notes: ["Measured 9.2 kg chargeable vs 8 kg estimated."] },
-  { number: "SHZ-10495", customer: 1, items: [["aero-14-ultrabook", 1], ["glide-silent-mouse", 1, { Colour: "Grey" }]], stage: "purchased", hoursAgo: 70, provider: "paystack", assignedTo: "Kemi (Orders)" },
-  { number: "SHZ-10497", customer: 2, items: [["stride-running-sneakers", 2, { "Size (EU)": "42", Colour: "White/Navy" }]], stage: "sourcing", hoursAgo: 30, provider: "flutterwave" },
-  { number: "SHZ-10499", customer: 3, items: [["breeze-rechargeable-fan", 1]], stage: "out_for_delivery", hoursAgo: 40, provider: "paystack" },
-  { number: "SHZ-10500", customer: 4, items: [["nova-air-fryer-6l", 1], ["aqua-insulated-bottle", 2, { Colour: "Navy" }]], stage: "china_warehouse", hoursAgo: 150, provider: "paystack", assignedTo: "Bayo (Warehouse)" },
-  { number: "SHZ-10501", customer: 5, items: [["echo-bass-bluetooth-speaker", 1, { Colour: "Blue" }]], stage: "ready_for_pickup", hoursAgo: 28, provider: "flutterwave", pickup: "lekki" },
-  { number: "SHZ-10502", customer: null, guest: { name: "Ngozi Eze", email: "ngozi.eze@example.com", phone: "+234 708 101 2020", state: "Anambra", city: "Awka" }, items: [["luxe-tote-bag", 1, { Colour: "Tan" }]], stage: "paid", hoursAgo: 3, provider: "paystack" },
-  { number: "SHZ-10503", customer: 6, items: [["pixel-watch-fit-pro", 1, { Strap: "Navy silicone" }], ["pulse-buds-anc", 1, { Colour: "Black" }]], stage: "customs_cleared", hoursAgo: 300, provider: "paystack" },
-  { number: "SHZ-10504", customer: 7, items: [["core-adjustable-dumbbells", 1]], stage: "ng_warehouse", hoursAgo: 20, provider: "flutterwave" },
-  { number: "SHZ-10505", customer: 1, items: [["mesh-wifi-router-ax3000", 1]], stage: "pending_payment", hoursAgo: 1, provider: "paystack" },
-  { number: "SHZ-10470", customer: 3, items: [["beam-smart-projector", 1]], stage: "refunded", hoursAgo: 620, provider: "paystack", notes: ["Supplier out of stock. Customer chose refund."] },
-  { number: "SHZ-10506", customer: 2, items: [["gleam-hair-dryer", 1], ["edge-beard-trimmer", 1]], stage: "arrived_ng", hoursAgo: 240, provider: "flutterwave" },
+  { number: "ALB-10482", customer: 0, items: [["volt-x12-5g-smartphone", 1, { Colour: "Ocean Blue" }], ["nexa-65w-gan-charger", 1]], stage: "dispatched", hoursAgo: 260, provider: "paystack", assignedTo: "Kemi (Orders)" },
+  { number: "ALB-10479", customer: 0, items: [["kora-20000mah-power-bank", 2, { Colour: "Black" }]], stage: "delivered", hoursAgo: 410, provider: "paystack", carrier: "jumia", confirmed: true },
+  { number: "ALB-10508", customer: 0, items: [["aba-handmade-leather-loafers", 1, { "Size (EU)": "42", Colour: "Brown" }], ["echo-bass-bluetooth-speaker", 1, { Colour: "Black" }], ["nexa-65w-gan-charger", 1]], stage: "delivered", hoursAgo: 120, provider: "paystack", carrier: "gig" },
+  { number: "ALB-10491", customer: 0, items: [["vista-27-4k-monitor", 1]], stage: "awaiting_balance", hoursAgo: 190, provider: "paystack", balanceKobo: 1_875_000, notes: ["Measured 9.2 kg chargeable vs 8 kg estimated."] },
+  { number: "ALB-10495", customer: 1, items: [["aero-14-ultrabook", 1], ["glide-silent-mouse", 1, { Colour: "Grey" }]], stage: "purchased", hoursAgo: 70, provider: "paystack", assignedTo: "Kemi (Orders)" },
+  { number: "ALB-10497", customer: 2, items: [["stride-running-sneakers", 2, { "Size (EU)": "42", Colour: "White/Navy" }]], stage: "sourcing", hoursAgo: 30, provider: "paystack", carrier: "jumia" },
+  { number: "ALB-10499", customer: 3, items: [["breeze-rechargeable-fan", 1]], stage: "out_for_delivery", hoursAgo: 40, provider: "paystack" },
+  { number: "ALB-10500", customer: 4, items: [["nova-air-fryer-6l", 1], ["aqua-insulated-bottle", 2, { Colour: "Navy" }]], stage: "china_warehouse", hoursAgo: 150, provider: "paystack", assignedTo: "Bayo (Warehouse)" },
+  { number: "ALB-10501", customer: 5, items: [["echo-bass-bluetooth-speaker", 1, { Colour: "Blue" }]], stage: "ready_for_pickup", hoursAgo: 28, provider: "paystack", carrier: "jumia", pickup: "lekki" },
+  { number: "ALB-10502", customer: null, guest: { name: "Ngozi Eze", email: "ngozi.eze@example.com", phone: "+234 708 101 2020", state: "Anambra", city: "Awka" }, items: [["luxe-tote-bag", 1, { Colour: "Tan" }]], stage: "paid", hoursAgo: 3, provider: "paystack" },
+  { number: "ALB-10503", customer: 6, items: [["pixel-watch-fit-pro", 1, { Strap: "Navy silicone" }], ["pulse-buds-anc", 1, { Colour: "Black" }]], stage: "customs_cleared", hoursAgo: 300, provider: "paystack" },
+  { number: "ALB-10504", customer: 7, items: [["core-adjustable-dumbbells", 1]], stage: "ng_warehouse", hoursAgo: 20, provider: "paystack", carrier: "jumia" },
+  { number: "ALB-10505", customer: 1, items: [["mesh-wifi-router-ax3000", 1]], stage: "pending_payment", hoursAgo: 1, provider: "paystack" },
+  { number: "ALB-10470", customer: 3, items: [["beam-smart-projector", 1]], stage: "refunded", hoursAgo: 620, provider: "paystack", notes: ["Supplier out of stock. Customer chose refund."] },
+  { number: "ALB-10506", customer: 2, items: [["gleam-hair-dryer", 1], ["edge-beard-trimmer", 1]], stage: "arrived_ng", hoursAgo: 240, provider: "paystack", carrier: "jumia" },
 ];
 
 const staffNames: Partial<Record<OrderStage, string>> = {
@@ -85,26 +93,64 @@ function build(spec: Spec, index: number): Order {
   const contact = c ?? { name: spec.guest!.name, email: spec.guest!.email, phone: spec.guest!.phone, state: spec.guest!.state, city: spec.guest!.city };
   const items = spec.items.map(([slug, quantity, options]) => {
     const p = products.find((x) => x.slug === slug)!;
+    const opts = options ?? {};
+    const variant = p.variants.find((v) => Object.entries(v.options).every(([k, val]) => opts[k] === val)) ?? p.variants[0]!;
     return {
       productId: p.id,
+      variantId: variant.id,
+      storeId: p.storeId,
       name: p.name,
       image: p.images[0]!,
       source: p.source,
-      options: options ?? {},
+      options: opts,
       quantity,
-      unitPriceKobo: unitPriceKobo(p),
+      unitPriceKobo: wholesaleUnitKobo(variantPriceKobo(p, variant), p.wholesale, quantity),
       estWeightKg: p.estWeightKg,
-      supplierCostFen: p.supplierPriceFen,
+      supplierCostFen: variant.supplierPriceFen,
       shipKobo: estShippingKobo(p),
-      chargeKg: p.source === "imported" ? chargeableKg(p.estWeightKg, p.dimsCm) : 0,
+      freeDelivery: p.freeDelivery,
     };
   });
   const hasImported = items.some((i) => i.source === "imported");
   const fulfilment = spec.pickup ? "pickup" : "delivery";
   const itemsKobo = items.reduce((s, i) => s + i.unitPriceKobo * i.quantity, 0);
   const intl = items.reduce((s, i) => s + i.shipKobo * i.quantity, 0);
-  const weight = items.reduce((s, i) => s + i.estWeightKg * i.quantity, 0);
-  const local = localDeliveryKobo(weight, spec.pickup ? { method: "pickup", pickupId: spec.pickup } : { method: "delivery", state: contact.state });
+  const carrier = spec.carrier ?? "gig";
+  const method = spec.pickup ? "pickup" : "door";
+  const storeIds = [...new Set(items.map((i) => i.storeId))];
+  const delivered = spec.stage === "delivered";
+  const storeOrders: StoreOrder[] = storeIds.map((storeId) => {
+    const store = storeById(storeId);
+    const idx = items.map((it, n) => (it.storeId === storeId ? n : -1)).filter((n) => n >= 0);
+    const its = idx.map((n) => items[n]!);
+    const subtotal = its.reduce((s, it) => s + it.unitPriceKobo * it.quantity, 0);
+    const chargeable = its.filter((it) => !it.freeDelivery);
+    const q = quoteShipment({
+      carrier, method, originState: store.state, destState: contact.state,
+      chargeableKg: chargeable.reduce((s, it) => s + it.estWeightKg * it.quantity, 0),
+      allFreeDelivery: chargeable.length === 0, storeSubtotalKobo: subtotal, freeOverKobo: store.freeDeliveryOverKobo,
+    });
+    let payout: PayoutStatus = "not_applicable";
+    if (!store.isPlatform) {
+      payout = spec.stage === "refunded" ? "frozen" : delivered ? (spec.confirmed ? "paid" : "awaiting_approval") : "held";
+    }
+    return {
+      storeId,
+      storeName: store.name,
+      itemIndexes: idx,
+      carrier,
+      method,
+      trackingNumber: ["out_for_delivery", "delivered", "ready_for_pickup", "dispatched", "arrived_ng", "customs_cleared", "ng_warehouse"].includes(spec.stage)
+        ? `${carrier === "gig" ? "GIG" : "JMD"}${spec.number.slice(4)}${storeIds.indexOf(storeId)}`
+        : null,
+      deliveryKobo: q.priceKobo,
+      freeDelivery: q.free,
+      subtotalKobo: subtotal,
+      commissionKobo: store.isPlatform ? 0 : Math.round(subtotal * (platformDefaults.commission.byCategory[products.find((x) => x.id === its[0]!.productId)!.category] ?? platformDefaults.commission.default)),
+      payout,
+    };
+  });
+  const local = storeOrders.reduce((s, so) => s + so.deliveryKobo, 0);
   const total = itemsKobo + intl + local;
   const paid = spec.stage === "pending_payment" ? 0 : total;
   const balance = spec.balanceKobo ?? 0;
@@ -136,10 +182,13 @@ function build(spec: Spec, index: number): Order {
     address: { line1: `${12 + index} Adeola Odeku Street`, city: contact.city, state: contact.state },
     fulfilment,
     pickupPoint: spec.pickup ? pickupPoints.find((p) => p.id === spec.pickup)?.name : undefined,
-    items: items.map(({ shipKobo: _s, chargeKg: _c, ...rest }) => rest),
+    items: items.map(({ shipKobo: _s, freeDelivery: _f, ...rest }) => rest),
     stage: spec.stage,
     events,
     provider: spec.provider,
+    carrier,
+    storeOrders,
+    deliveryConfirmedAt: delivered && spec.confirmed ? hoursAgo(spec.hoursAgo / 4) : null,
     totals: {
       itemsKobo,
       intlShippingKobo: intl,
@@ -170,13 +219,13 @@ function build(spec: Spec, index: number): Order {
 export const orders: Order[] = specs.map(build).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
 export const staff: Staff[] = [
-  { id: "stf_01", name: "Owner (you)", email: "owner@shupzy.com", role: "super_admin", lastActiveAt: hoursAgo(0.2) },
-  { id: "stf_02", name: "Kemi Adebayo", email: "kemi@shupzy.com", role: "order_manager", lastActiveAt: hoursAgo(1) },
-  { id: "stf_03", name: "Daniel Obi", email: "daniel@shupzy.com", role: "product_manager", lastActiveAt: hoursAgo(5) },
-  { id: "stf_04", name: "Li Wei", email: "liwei@shupzy.com", role: "warehouse", lastActiveAt: hoursAgo(9) },
-  { id: "stf_05", name: "Bayo Salami", email: "bayo@shupzy.com", role: "warehouse", lastActiveAt: hoursAgo(2) },
-  { id: "stf_06", name: "Grace Effiong", email: "grace@shupzy.com", role: "support", lastActiveAt: hoursAgo(0.5) },
-  { id: "stf_07", name: "Musa Bello", email: "musa@shupzy.com", role: "finance", lastActiveAt: hoursAgo(26) },
+  { id: "stf_01", name: "Owner (you)", email: "owner@alaba.ng", role: "super_admin", lastActiveAt: hoursAgo(0.2) },
+  { id: "stf_02", name: "Kemi Adebayo", email: "kemi@alaba.ng", role: "order_manager", lastActiveAt: hoursAgo(1) },
+  { id: "stf_03", name: "Daniel Obi", email: "daniel@alaba.ng", role: "product_manager", lastActiveAt: hoursAgo(5) },
+  { id: "stf_04", name: "Li Wei", email: "liwei@alaba.ng", role: "warehouse", lastActiveAt: hoursAgo(9) },
+  { id: "stf_05", name: "Bayo Salami", email: "bayo@alaba.ng", role: "warehouse", lastActiveAt: hoursAgo(2) },
+  { id: "stf_06", name: "Grace Effiong", email: "grace@alaba.ng", role: "support", lastActiveAt: hoursAgo(0.5) },
+  { id: "stf_07", name: "Musa Bello", email: "musa@alaba.ng", role: "finance", lastActiveAt: hoursAgo(26) },
 ];
 
 export const roleLabels: Record<Staff["role"], string> = {
@@ -197,9 +246,9 @@ export const suppliers: Supplier[] = [
 ];
 
 export const shipments: Shipment[] = [
-  { id: "shp_01", code: "AIR-2611-03", agent: "Guangzhou–Lagos Air Express", waybill: "176-48213390", orderNumbers: ["SHZ-10482", "SHZ-10503"], chargeableKg: 38.5, costKobo: 42_350_000, stage: "dispatched", dispatchedAt: hoursAgo(60), etaAt: hoursAgo(-90) },
-  { id: "shp_02", code: "AIR-2611-02", agent: "Guangzhou–Lagos Air Express", waybill: "176-48201175", orderNumbers: ["SHZ-10506"], chargeableKg: 52, costKobo: 57_200_000, stage: "arrived_ng", dispatchedAt: hoursAgo(200), etaAt: hoursAgo(20) },
-  { id: "shp_03", code: "AIR-2611-04", agent: "Guangzhou–Lagos Air Express", waybill: "—", orderNumbers: ["SHZ-10500"], chargeableKg: 0, costKobo: 0, stage: "packing" },
+  { id: "shp_01", code: "AIR-2611-03", agent: "Guangzhou–Lagos Air Express", waybill: "176-48213390", orderNumbers: ["ALB-10482", "ALB-10503"], chargeableKg: 38.5, costKobo: 42_350_000, stage: "dispatched", dispatchedAt: hoursAgo(60), etaAt: hoursAgo(-90) },
+  { id: "shp_02", code: "AIR-2611-02", agent: "Guangzhou–Lagos Air Express", waybill: "176-48201175", orderNumbers: ["ALB-10506"], chargeableKg: 52, costKobo: 57_200_000, stage: "arrived_ng", dispatchedAt: hoursAgo(200), etaAt: hoursAgo(20) },
+  { id: "shp_03", code: "AIR-2611-04", agent: "Guangzhou–Lagos Air Express", waybill: "—", orderNumbers: ["ALB-10500"], chargeableKg: 0, costKobo: 0, stage: "packing" },
 ];
 
 export const discounts: Discount[] = [
@@ -210,17 +259,17 @@ export const discounts: Discount[] = [
 ];
 
 export const tickets: Ticket[] = [
-  { id: "tkt_01", orderNumber: "SHZ-10491", customerName: "Adaeze Okafor", subject: "Why is there a shipping balance?", status: "open", updatedAt: hoursAgo(2), lastMessage: "Hi, I got a message to pay extra shipping. Can you explain?" },
-  { id: "tkt_02", orderNumber: "SHZ-10497", customerName: "Chiamaka Nwosu", subject: "Change shoe size to 43", status: "pending", updatedAt: hoursAgo(6), lastMessage: "We've asked the supplier, will confirm shortly." },
+  { id: "tkt_01", orderNumber: "ALB-10491", customerName: "Adaeze Okafor", subject: "Why is there a shipping balance?", status: "open", updatedAt: hoursAgo(2), lastMessage: "Hi, I got a message to pay extra shipping. Can you explain?" },
+  { id: "tkt_02", orderNumber: "ALB-10497", customerName: "Chiamaka Nwosu", subject: "Change shoe size to 43", status: "pending", updatedAt: hoursAgo(6), lastMessage: "We've asked the supplier, will confirm shortly." },
   { id: "tkt_03", orderNumber: null, customerName: "Ibrahim Musa", subject: "Do you deliver to Kaduna?", status: "resolved", updatedAt: hoursAgo(30), lastMessage: "Yes, 3–6 working days after arrival in Lagos." },
 ];
 
 export const auditLog: AuditEntry[] = [
-  { id: "aud_01", actor: "Li Wei", action: "Recorded weight 9.2 kg (est. 8 kg)", target: "Order SHZ-10491", at: hoursAgo(3) },
+  { id: "aud_01", actor: "Li Wei", action: "Recorded weight 9.2 kg (est. 8 kg)", target: "Order ALB-10491", at: hoursAgo(3) },
   { id: "aud_02", actor: "Owner", action: "Changed FX rate ₦212 → ₦215", target: "Pricing", at: hoursAgo(23) },
-  { id: "aud_03", actor: "Kemi Adebayo", action: "Moved to Supplier purchased", target: "Order SHZ-10495", at: hoursAgo(30) },
+  { id: "aud_03", actor: "Kemi Adebayo", action: "Moved to Supplier purchased", target: "Order ALB-10495", at: hoursAgo(30) },
   { id: "aud_04", actor: "Daniel Obi", action: "Published product", target: "Glow LED Skincare Mask", at: hoursAgo(50) },
-  { id: "aud_05", actor: "Musa Bello", action: "Approved refund ₦210,450", target: "Order SHZ-10470", at: hoursAgo(120) },
+  { id: "aud_05", actor: "Musa Bello", action: "Approved refund ₦210,450", target: "Order ALB-10470", at: hoursAgo(120) },
   { id: "aud_06", actor: "Owner", action: "Invited staff member", target: "Grace Effiong (Support)", at: hoursAgo(300) },
 ];
 

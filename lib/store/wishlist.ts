@@ -20,6 +20,6 @@ export const useWishlist = create<WishlistState>()(
       },
       has: (slug) => get().slugs.includes(slug),
     }),
-    { name: "shupzy-wishlist", storage: createJSONStorage(() => localStorage) },
+    { name: "alaba-wishlist", storage: createJSONStorage(() => localStorage) },
   ),
 );

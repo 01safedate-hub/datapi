@@ -15,7 +15,7 @@ const pages = [
 ] as const;
 
 const emails = [
-  { id: "order_confirmed", name: "Order confirmed", subject: "Your Shupzy order {{order_number}} is confirmed", body: "Hi {{first_name}},\n\nThanks for your order. We've received {{total}} and will order your items from the supplier within 48 hours.\n\nTrack it any time: {{tracking_link}}\n\nThe Shupzy team" },
+  { id: "order_confirmed", name: "Order confirmed", subject: "Your Alaba order {{order_number}} is confirmed", body: "Hi {{first_name}},\n\nThanks for your order. We've received {{total}} and will order your items from the supplier within 48 hours.\n\nTrack it any time: {{tracking_link}}\n\nThe Alaba team" },
   { id: "balance_due", name: "Shipping balance request", subject: "Action needed: shipping for {{order_number}}", body: "Hi {{first_name}},\n\nYour item weighed {{chargeable_kg}} kg at our China warehouse, so air freight costs {{balance}} more than estimated. Nothing has been charged.\n\nApprove and pay, or choose a refund: {{approval_link}}" },
   { id: "dispatched", name: "Dispatched", subject: "{{order_number}} is on its way to Lagos", body: "Hi {{first_name}},\n\nYour order is on a flight to Lagos. Air waybill: {{waybill}}. Expected in Lagos by {{eta}}." },
   { id: "delivered", name: "Delivered", subject: "Delivered: {{order_number}}", body: "Hi {{first_name}},\n\nYour order has been delivered. Something not right? Reply to this email within 48 hours." },
@@ -55,7 +55,7 @@ export function ContentEditor() {
           <Field label="Body" htmlFor="e-body" hint="Variables in {{double braces}} are filled in automatically."><Textarea id="e-body" className="min-h-56 font-mono text-sm" value={e.body} onChange={(ev) => setTpl((l) => l.map((x) => (x.id === active ? { ...x, body: ev.target.value } : x)))} /></Field>
           <div className="flex gap-2">
             <Button onClick={() => toast.success(`“${e.name}” template saved`)}>Save template</Button>
-            <Button variant="outline" onClick={() => toast.success("Test email sent to owner@shupzy.com")}>Send test</Button>
+            <Button variant="outline" onClick={() => toast.success("Test email sent to owner@alaba.ng")}>Send test</Button>
           </div>
         </div>
       </Card>
