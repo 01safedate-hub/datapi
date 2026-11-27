@@ -25,7 +25,7 @@ type Row = {
   source: "imported" | "local";
   origin: string;
   status: "active" | "draft" | "archived";
-  supplier_price_fen: number | null;
+  supplier_price_fen?: number | null;
   price_kobo: number | null;
   compare_at_kobo: number | null;
   est_weight_g: number;
@@ -48,7 +48,7 @@ type Row = {
     id: string;
     sku: string;
     options: Record<string, string>;
-    supplier_price_fen: number | null;
+    supplier_price_fen?: number | null;
     price_kobo: number | null;
     compare_at_kobo: number | null;
     stock: number;
@@ -153,8 +153,14 @@ function toProduct(r: Row): Product {
   };
 }
 
-const select =
-  "*,stores(slug),product_media(path,sort),product_variants(id,sku,options,supplier_price_fen,price_kobo,compare_at_kobo,stock,active)";
+// Explicit public columns only: supplier cost, seller_id and external_id are
+// not granted to the public key, and asking for them fails the whole request.
+const select = [
+  "id,slug,name,brand,brand_slug,description,highlights,specs,category,source,origin,status",
+  "price_kobo,compare_at_kobo,est_weight_g,dims_cm,moq,stock,availability,delivery_days,options,created_at",
+  "wholesale,free_delivery,condition,warranty,video_url,tags",
+  "stores(slug),product_media(path,sort),product_variants(id,sku,options,price_kobo,compare_at_kobo,stock,active)",
+].join(",");
 
 const [productRows, brandRows] = await Promise.all([
   get<Row>(`products?select=${encodeURIComponent(select)}&status=eq.active&order=created_at.desc`),
